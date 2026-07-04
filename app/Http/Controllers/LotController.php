@@ -114,4 +114,43 @@ class LotController extends Controller
 
         return back()->with('success', "{$count} unassigned meters moved to lot.");
     }
+
+    public function destroy(Lot $lot)
+    {
+        if (Auth::user()->role !== 'contractor') abort(403);
+
+        // Check if there are any meters in this lot that are assigned, installed, or have issues
+        $nonStockMetersCount = Meter::where('lot_id', $lot->id)
+            ->where('status', '!=', 'stock')
+            ->count();
+
+        if ($nonStockMetersCount > 0) {
+            return back()->withErrors(['error' => "Cannot delete Lot {$lot->lot_number}. It contains {$nonStockMetersCount} meter(s) that are already assigned, installed, or marked as issue/returned."]);
+        }
+
+        // Clean delete: delete all meters in this lot that are in status 'stock'
+        \Illuminate\Support\Facades\DB::transaction(function () use ($lot) {
+            // Find groups associated with this lot or box groups
+            // Box groups are created dynamically per box import, e.g. "Box Meter1-Meter5". Let's delete empty groups as well.
+            $groupIds = Meter::where('lot_id', $lot->id)->whereNotNull('group_id')->pluck('group_id')->unique()->toArray();
+            
+            // Delete meters in this lot
+            Meter::where('lot_id', $lot->id)->delete();
+            
+            // Delete associated groups if they are now empty
+            if (!empty($groupIds)) {
+                foreach ($groupIds as $gid) {
+                    $group = MeterGroup::find($gid);
+                    if ($group && $group->meters()->count() === 0) {
+                        $group->delete();
+                    }
+                }
+            }
+
+            // Delete the lot itself
+            $lot->delete();
+        });
+
+        return redirect()->route('lots.index')->with('success', "Lot {$lot->lot_number} and all its stock meters were successfully removed.");
+    }
 }

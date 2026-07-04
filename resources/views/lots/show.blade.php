@@ -19,6 +19,14 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="mx-4 sm:mx-0 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    @foreach ($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                    @endforeach
+                </div>
+            @endif
+
             {{-- Lot Info + Edit --}}
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mx-4 sm:mx-0">
                 {{-- Info --}}
@@ -40,17 +48,34 @@
                     </div>
                 </div>
 
-                {{-- Edit --}}
-                <div class="bg-white rounded-lg shadow-sm p-5">
-                    <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Edit Lot</h3>
-                    <form method="POST" action="{{ route('lots.update', $lot) }}" class="space-y-3">
-                        @csrf @method('PATCH')
-                        <input type="text" name="description" value="{{ $lot->description }}" placeholder="Description"
-                            class="w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border focus:border-indigo-500 focus:ring-indigo-500">
-                        <input type="date" name="import_date" value="{{ $lot->import_date?->format('Y-m-d') }}"
-                            class="w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border focus:border-indigo-500 focus:ring-indigo-500">
-                        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md text-sm font-medium hover:bg-indigo-700">Save</button>
-                    </form>
+                {{-- Edit & Delete --}}
+                <div class="bg-white rounded-lg shadow-sm p-5 flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Edit Lot</h3>
+                        <form method="POST" action="{{ route('lots.update', $lot) }}" class="space-y-3">
+                            @csrf @method('PATCH')
+                            <input type="text" name="description" value="{{ $lot->description }}" placeholder="Description"
+                                class="w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border focus:border-indigo-500 focus:ring-indigo-500">
+                            <input type="date" name="import_date" value="{{ $lot->import_date?->format('Y-m-d') }}"
+                                class="w-full rounded-md border-gray-300 shadow-sm text-sm p-2 border focus:border-indigo-500 focus:ring-indigo-500">
+                            <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition">Save Changes</button>
+                        </form>
+                    </div>
+
+                    @if($stats['total'] === $stats['stock'])
+                        <div class="border-t border-gray-100 pt-4 mt-4">
+                            <form method="POST" action="{{ route('lots.destroy', $lot) }}" onsubmit="return confirm('Delete this entire lot and all its associated meters from stock? This cannot be undone!')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="w-full bg-red-100 hover:bg-red-200 text-red-700 py-2 rounded-md text-sm font-semibold transition">
+                                    🗑 Delete Lot & All Stock Meters
+                                </button>
+                            </form>
+                        </div>
+                    @else
+                        <div class="border-t border-gray-100 pt-4 mt-4 text-xs text-gray-500 italic text-center">
+                            ⚠️ Cannot delete lot: some meters are already assigned or installed.
+                        </div>
+                    @endif
                 </div>
             </div>
 

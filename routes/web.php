@@ -85,6 +85,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/lots', [App\Http\Controllers\LotController::class, 'store'])->name('lots.store');
     Route::get('/lots/{lot}', [App\Http\Controllers\LotController::class, 'show'])->name('lots.show');
     Route::patch('/lots/{lot}', [App\Http\Controllers\LotController::class, 'update'])->name('lots.update');
+    Route::delete('/lots/{lot}', [App\Http\Controllers\LotController::class, 'destroy'])->name('lots.destroy');
     Route::post('/lots/assign-existing', [App\Http\Controllers\LotController::class, 'assignExisting'])->name('lots.assign-existing');
 
     // Admin: Installation Field Config (Contractor)
