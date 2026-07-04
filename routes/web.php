@@ -92,7 +92,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/admin/installation-config', [App\Http\Controllers\InstallationConfigController::class, 'update'])->name('admin.installation-config.update');
 
     // Admin: Map View (Contractor)
-    Route::get('/admin/map', [App\Http\Controllers\MapController.php, 'index'])->name('admin.map.index');
+    Route::get('/admin/map', [App\Http\Controllers\MapController::class, 'index'])->name('admin.map.index');
 
     // Admin: MI Issue Types (Contractor)
     Route::get('/admin/mi-issue-types', [App\Http\Controllers\MiIssueTypeController::class, 'index'])->name('admin.mi-issue-types');
