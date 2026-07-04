@@ -351,7 +351,7 @@
             <!-- Page title / breadcrumb -->
             <div class="flex-1 min-w-0">
                 @isset($header)
-                    <div class="text-base font-semibold text-gray-900 truncate">{{ $header }}</div>
+                    <div class="text-base font-semibold text-gray-900 truncate">{!! $header !!}</div>
                 @endisset
             </div>
 
