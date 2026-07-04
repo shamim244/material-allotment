@@ -69,15 +69,15 @@
         style="min-height:100vh">
 
         <!-- Logo + Toggle -->
-        <div class="flex items-center justify-between px-3 py-4 border-b border-white/10 shrink-0">
-            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 min-w-0 overflow-hidden">
+        <div class="flex items-center shrink-0 px-3 py-4 border-b border-white/10"
+             :class="sidebarOpen ? 'justify-between' : 'justify-center'">
+            <a href="{{ route('dashboard') }}" class="flex items-center gap-2 min-w-0 overflow-hidden" x-show="sidebarOpen">
                 <div class="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
                     </svg>
                 </div>
-                <span x-show="sidebarOpen" x-transition:enter="transition-opacity duration-200" x-transition:enter-end="opacity-100" x-transition:leave-end="opacity-0" x-cloak
-                    class="text-sm font-bold text-white truncate">Material</span>
+                <span class="text-sm font-bold text-white truncate">Material</span>
             </a>
             <button @click="sidebarOpen = !sidebarOpen"
                 class="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition">
