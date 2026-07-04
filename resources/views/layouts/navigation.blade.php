@@ -65,6 +65,9 @@
                                 <a href="{{ route('accounting.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm {{ request()->routeIs('accounting.*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50' }} transition">
                                     <span class="text-base">💰</span> Accounting
                                 </a>
+                                <a href="{{ route('admin.map.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm {{ request()->routeIs('admin.map.*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50' }} transition">
+                                    <span class="text-base">🗺️</span> Installation Map
+                                </a>
                                 <div class="border-t border-gray-100 my-1"></div>
                                 <a href="{{ route('admin.users.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm {{ request()->routeIs('admin.users.*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50' }} transition">
                                     <span class="text-base">👥</span> Users
@@ -242,6 +245,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('accounting.index')" :active="request()->routeIs('accounting.index')">
                     💰 {{ __('Accounting') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('admin.map.index')" :active="request()->routeIs('admin.map.*')">
+                    🗺️ {{ __('Installation Map') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.users.index')" :active="request()->routeIs('admin.users.*')">
                     👥 {{ __('Users') }}

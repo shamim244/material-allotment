@@ -18,7 +18,7 @@ class SettingTest extends TestCase
         $response = $this->actingAs($admin)->get('/admin/settings');
 
         $response->assertStatus(200);
-        $response->assertSee('SMTP Settings');
+        $response->assertSee('Email Connections');
     }
 
     public function test_admin_can_update_smtp_settings(): void
@@ -36,7 +36,7 @@ class SettingTest extends TestCase
             'mail_from_name' => 'System Test',
         ]);
 
-        $response->assertSessionHas('success', 'SMTP Settings updated successfully.');
+        $response->assertSessionHas('success', 'Email Connections updated successfully.');
         
         $this->assertDatabaseHas('settings', [
             'key' => 'mail_host',

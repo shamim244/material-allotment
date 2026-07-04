@@ -94,7 +94,18 @@
             </div>
 
             <!-- MI List -->
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg"
+                 x-data="{
+                    selected: [],
+                    selectAll: false,
+                    toggleAll() {
+                        if (this.selectAll) {
+                            this.selected = Array.from(document.querySelectorAll('.mi-checkbox')).map(el => el.value);
+                        } else {
+                            this.selected = [];
+                        }
+                    }
+                 }">
                 <div class="p-4 sm:p-6 text-gray-900">
 
                     @if (session('success'))
@@ -112,68 +123,95 @@
                             @endif
                         </div>
                     @else
+
+                        {{-- Select All + Count (Contractor only) --}}
+                        @if(Auth::user()->role === 'contractor')
+                        <div class="flex items-center justify-between mb-4">
+                            <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
+                                <input type="checkbox" x-model="selectAll" @change="toggleAll()"
+                                       class="rounded border-gray-300 text-indigo-600 focus:ring-indigo-500">
+                                Select All on Page
+                            </label>
+                            <span x-show="selected.length > 0" x-cloak class="text-sm font-medium text-indigo-600">
+                                <span x-text="selected.length"></span> selected
+                            </span>
+                        </div>
+                        @endif
+
                         <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                             @foreach($activations as $activation)
-                                <a href="{{ route('mi.show', $activation->id) }}" 
-                                   class="flex flex-col border rounded-xl p-4 hover:shadow-lg transition hover:border-indigo-300 group">
-                                    {{-- Row 1: Meter # + Status Badge --}}
-                                    <div class="flex justify-between items-start mb-2">
-                                        <span class="font-bold text-lg text-indigo-700 group-hover:text-indigo-800">{{ $activation->meter->meter_number }}</span>
-                                        @php
-                                            $statusColors = [
-                                                'pending'       => 'bg-yellow-100 text-yellow-800',
-                                                'issue'         => 'bg-red-100 text-red-800',
-                                                'complete'      => 'bg-green-100 text-green-800',
-                                                'job_not_found' => 'bg-purple-100 text-purple-800',
-                                            ];
-                                        @endphp
-                                        <span class="px-2 py-1 text-xs rounded-full font-medium {{ $statusColors[$activation->mi_status] ?? 'bg-gray-100 text-gray-800' }}">
-                                            {{ $activation->mi_status === 'job_not_found' ? 'Job Not Found' : ucfirst($activation->mi_status) }}
-                                        </span>
-                                    </div>
+                                <div class="relative flex flex-col border rounded-xl p-4 hover:shadow-lg transition hover:border-indigo-300 group"
+                                     :class="selected.includes('{{ $activation->id }}') ? 'ring-2 ring-indigo-400 border-indigo-400 bg-indigo-50/30' : ''">
 
-                                    {{-- Row 2: Type Badge + Issue --}}
-                                    <div class="flex flex-wrap items-center gap-1.5 mb-2">
-                                        @if($activation->meter->installationDetail)
-                                            @if($activation->meter->installationDetail->install_type === 'replacement')
-                                                <span class="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium">🔄 Replacement</span>
-                                            @else
-                                                <span class="px-2 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-700 font-medium">🆕 NSC</span>
-                                            @endif
-                                        @endif
-
-                                        @if($activation->mi_status === 'issue' && ($activation->issueType || $activation->issue_detail))
-                                            <span class="text-xs text-red-600 font-medium">
-                                                ⚠ {{ $activation->issueType ? $activation->issueType->name : 'Other: ' . $activation->issue_detail }}
-                                            </span>
-                                        @endif
-                                    </div>
-
-                                    {{-- Middle: Images + Remark --}}
-                                    @if($activation->images->count() > 0 || $activation->remark)
-                                    <div class="mb-2 space-y-1">
-                                        @if($activation->images->count() > 0)
-                                        <div class="flex items-center text-xs text-indigo-500">
-                                            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/></svg>
-                                            {{ $activation->images->count() }} image(s)
-                                        </div>
-                                        @endif
-                                        @if($activation->remark)
-                                        <div class="text-xs text-gray-500 truncate">{{ $activation->remark }}</div>
-                                        @endif
+                                    {{-- Checkbox (Contractor only) --}}
+                                    @if(Auth::user()->role === 'contractor')
+                                    <div class="absolute top-3 right-3 z-10" @click.stop>
+                                        <input type="checkbox" value="{{ $activation->id }}"
+                                               x-model="selected"
+                                               class="mi-checkbox rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4">
                                     </div>
                                     @endif
 
-                                    {{-- Footer: Updated (left) + Worker (right) --}}
-                                    <div class="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between">
-                                        <span class="text-xs text-gray-400">{{ $activation->updated_at->diffForHumans() }}</span>
-                                        @if(Auth::user()->role === 'contractor')
-                                            <span class="text-xs text-gray-500">
-                                                👷 <span class="text-indigo-600 hover:underline" @click.stop>{{ $activation->worker->name }}</span>
+                                    <a href="{{ route('mi.show', $activation->id) }}" class="flex flex-col flex-1">
+                                        {{-- Row 1: Meter # + Status Badge --}}
+                                        <div class="flex justify-between items-start mb-2 pr-6">
+                                            <span class="font-bold text-lg text-indigo-700 group-hover:text-indigo-800">{{ $activation->meter->meter_number }}</span>
+                                            @php
+                                                $statusColors = [
+                                                    'pending'       => 'bg-yellow-100 text-yellow-800',
+                                                    'issue'         => 'bg-red-100 text-red-800',
+                                                    'complete'      => 'bg-green-100 text-green-800',
+                                                    'job_not_found' => 'bg-purple-100 text-purple-800',
+                                                ];
+                                            @endphp
+                                            <span class="px-2 py-1 text-xs rounded-full font-medium {{ $statusColors[$activation->mi_status] ?? 'bg-gray-100 text-gray-800' }}">
+                                                {{ $activation->mi_status === 'job_not_found' ? 'Job Not Found' : ucfirst($activation->mi_status) }}
                                             </span>
+                                        </div>
+
+                                        {{-- Row 2: Type Badge + Issue --}}
+                                        <div class="flex flex-wrap items-center gap-1.5 mb-2">
+                                            @if($activation->meter->installationDetail)
+                                                @if($activation->meter->installationDetail->install_type === 'replacement')
+                                                    <span class="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 font-medium">🔄 Replacement</span>
+                                                @else
+                                                    <span class="px-2 py-0.5 text-xs rounded-full bg-indigo-100 text-indigo-700 font-medium">🆕 NSC</span>
+                                                @endif
+                                            @endif
+
+                                            @if($activation->mi_status === 'issue' && ($activation->issueType || $activation->issue_detail))
+                                                <span class="text-xs text-red-600 font-medium">
+                                                    ⚠ {{ $activation->issueType ? $activation->issueType->name : 'Other: ' . $activation->issue_detail }}
+                                                </span>
+                                            @endif
+                                        </div>
+
+                                        {{-- Middle: Images + Remark --}}
+                                        @if($activation->images->count() > 0 || $activation->remark)
+                                        <div class="mb-2 space-y-1">
+                                            @if($activation->images->count() > 0)
+                                            <div class="flex items-center text-xs text-indigo-500">
+                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"/></svg>
+                                                {{ $activation->images->count() }} image(s)
+                                            </div>
+                                            @endif
+                                            @if($activation->remark)
+                                            <div class="text-xs text-gray-500 truncate">{{ $activation->remark }}</div>
+                                            @endif
+                                        </div>
                                         @endif
-                                    </div>
-                                </a>
+
+                                        {{-- Footer: Updated (left) + Worker (right) --}}
+                                        <div class="mt-auto pt-2 border-t border-gray-100 flex items-center justify-between">
+                                            <span class="text-xs text-gray-400">{{ $activation->updated_at->diffForHumans() }}</span>
+                                            @if(Auth::user()->role === 'contractor')
+                                                <span class="text-xs text-gray-500">
+                                                    👷 <span class="text-indigo-600">{{ $activation->worker->name }}</span>
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </a>
+                                </div>
                             @endforeach
                         </div>
 
@@ -183,8 +221,45 @@
                     @endif
 
                 </div>
+
+                {{-- Bulk Action Bar (fixed at bottom) --}}
+                @if(Auth::user()->role === 'contractor')
+                <div x-show="selected.length > 0" x-cloak x-transition
+                     class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50 px-4 py-3">
+                    <div class="max-w-7xl mx-auto flex items-center justify-between gap-4">
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-semibold text-gray-700">
+                                ⚡ <span x-text="selected.length"></span> selected
+                            </span>
+                            <button @click="selected = []; selectAll = false" class="text-xs text-gray-400 hover:text-gray-600">Clear</button>
+                        </div>
+
+                        <form method="POST" action="{{ route('mi.bulk-status') }}" class="flex items-center gap-3"
+                              onsubmit="return confirm('Update ' + document.querySelectorAll('.bulk-id').length + ' MI record(s)?')">
+                            @csrf
+                            <template x-for="id in selected" :key="id">
+                                <input type="hidden" name="activation_ids[]" :value="id" class="bulk-id">
+                            </template>
+
+                            <select name="mi_status" required class="rounded-md border-gray-300 shadow-sm text-sm py-2 px-3 focus:border-indigo-500 focus:ring-indigo-500">
+                                <option value="">Change to...</option>
+                                <option value="pending">⏳ Pending</option>
+                                <option value="complete">✅ Complete</option>
+                                <option value="issue">❌ Issue</option>
+                                <option value="job_not_found">🔍 Job Not Found</option>
+                            </select>
+
+                            <button type="submit" class="bg-indigo-600 text-white px-5 py-2 rounded-md text-sm font-semibold hover:bg-indigo-700 transition shadow-sm">
+                                Apply
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                @endif
+
             </div>
         </div>
     </div>
 
 </x-app-layout>
+

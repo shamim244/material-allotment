@@ -91,6 +91,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/installation-config', [App\Http\Controllers\InstallationConfigController::class, 'index'])->name('admin.installation-config');
     Route::patch('/admin/installation-config', [App\Http\Controllers\InstallationConfigController::class, 'update'])->name('admin.installation-config.update');
 
+    // Admin: Map View (Contractor)
+    Route::get('/admin/map', [App\Http\Controllers\MapController.php, 'index'])->name('admin.map.index');
+
     // Admin: MI Issue Types (Contractor)
     Route::get('/admin/mi-issue-types', [App\Http\Controllers\MiIssueTypeController::class, 'index'])->name('admin.mi-issue-types');
     Route::post('/admin/mi-issue-types', [App\Http\Controllers\MiIssueTypeController::class, 'store'])->name('admin.mi-issue-types.store');
@@ -107,6 +110,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/mi/{activation}/images', [App\Http\Controllers\MIController::class, 'uploadImages'])->name('mi.upload');
     Route::delete('/mi/images/{image}', [App\Http\Controllers\MIController::class, 'deleteImage'])->name('mi.image.delete');
     Route::patch('/mi/{activation}/details', [App\Http\Controllers\MIController::class, 'updateInstallationDetails'])->name('mi.details.update');
+    Route::post('/mi/bulk-status', [App\Http\Controllers\MIController::class, 'bulkUpdateStatus'])->name('mi.bulk-status');
 
     // Admin: User Management (Contractor only)
     Route::get('/admin/users', [App\Http\Controllers\UserManagementController::class, 'index'])->name('admin.users.index');

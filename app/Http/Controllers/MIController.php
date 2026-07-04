@@ -219,4 +219,52 @@ class MIController extends Controller
 
         return back()->with('success', 'Installation details updated.');
     }
+
+    /**
+     * Bulk update MI status for multiple activations at once.
+     */
+    public function bulkUpdateStatus(Request $request)
+    {
+        $user = Auth::user();
+        if ($user->role !== 'contractor') abort(403);
+
+        $request->validate([
+            'activation_ids' => ['required', 'array', 'min:1'],
+            'activation_ids.*' => ['exists:meter_activations,id'],
+            'mi_status' => ['required', 'in:pending,complete,issue,job_not_found'],
+        ]);
+
+        $count = 0;
+        $activations = MeterActivation::whereIn('id', $request->activation_ids)->with('meter')->get();
+
+        foreach ($activations as $activation) {
+            $oldStatus = $activation->mi_status;
+            if ($oldStatus === $request->mi_status) continue;
+
+            $activation->update([
+                'mi_status' => $request->mi_status,
+                'completed_at' => $request->mi_status === 'complete' ? now() : null,
+            ]);
+
+            // Update meter status
+            if ($request->mi_status === 'complete') {
+                $activation->meter->update(['status' => 'mi_complete']);
+            } elseif ($request->mi_status === 'issue') {
+                $activation->meter->update(['status' => 'mi_issue']);
+            }
+
+            // Audit log
+            \App\Models\MeterLog::create([
+                'meter_id' => $activation->meter_id,
+                'action' => 'mi_status_change',
+                'user_id' => $user->id,
+                'remark' => "Bulk MI status changed from {$oldStatus} to {$request->mi_status}.",
+                'timestamp' => now(),
+            ]);
+
+            $count++;
+        }
+
+        return back()->with('success', "{$count} MI record(s) updated to " . ucfirst(str_replace('_', ' ', $request->mi_status)) . ".");
+    }
 }
