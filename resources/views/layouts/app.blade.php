@@ -51,6 +51,25 @@
             text-transform: uppercase; color: #475569;
             padding: 16px 12px 6px; margin: 0;
         }
+        /* Custom sleek scrollbar for sidebar */
+        .sidebar-scrollable::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        .sidebar-scrollable::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .sidebar-scrollable::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.12);
+            border-radius: 9999px;
+        }
+        .sidebar-scrollable::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        .sidebar-scrollable {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
+        }
     </style>
 
     @stack('styles')
@@ -91,7 +110,7 @@
         </div>
 
         <!-- Nav Items -->
-        <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+        <nav class="flex-1 overflow-y-auto py-3 px-2 space-y-0.5 sidebar-scrollable">
 
             {{-- Dashboard --}}
             <a href="{{ route('dashboard') }}"
@@ -279,15 +298,15 @@
     <aside x-show="mobileSidebarOpen" x-cloak x-transition:enter="transition ease-out duration-200"
            x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
            x-transition:leave="transition ease-in duration-150" x-transition:leave-end="-translate-x-full"
-           class="lg:hidden fixed inset-y-0 left-0 w-64 bg-[#0f172a] z-50 flex flex-col overflow-y-auto">
+           class="lg:hidden fixed inset-y-0 left-0 w-64 bg-[#0f172a] z-50 flex flex-col overflow-y-auto sidebar-scrollable">
         <div class="flex items-center justify-between px-4 py-4 border-b border-white/10">
             <span class="text-sm font-bold text-white">Material Allotment</span>
             <button @click="mobileSidebarOpen = false" class="text-slate-400 hover:text-white p-1">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
-        {{-- Same nav, always expanded --}}
-        <nav class="flex-1 py-3 px-3 space-y-0.5">
+        <!-- Same nav, always expanded -->
+        <nav class="flex-1 py-3 px-3 space-y-0.5 sidebar-scrollable">
             <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
