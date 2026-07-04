@@ -97,7 +97,7 @@
                             <div class="border rounded-lg p-4 {{ $user->trashed() ? 'bg-red-50 opacity-60' : (!$user->is_active ? 'bg-gray-50 opacity-75' : '') }}">
                                 <div class="flex justify-between items-start mb-2">
                                     <div>
-                                        <div class="font-semibold text-gray-900">{{ $user->name }}</div>
+                                        <a href="{{ route('admin.users.edit', $user) }}" class="font-semibold text-gray-900 hover:text-indigo-600 hover:underline block">{{ $user->name }}</a>
                                         <div class="text-xs text-gray-500">{{ $user->email }}</div>
                                     </div>
                                     <div class="flex flex-col items-end gap-1">
@@ -124,6 +124,9 @@
                                             </button>
                                         </form>
                                     @else
+                                        <a href="{{ route('admin.users.edit', $user->id) }}" class="px-3 py-1.5 text-xs font-medium rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 transition flex items-center">
+                                            Edit
+                                        </a>
                                         <form method="POST" action="{{ route('admin.users.toggle', $user->id) }}">
                                             @csrf
                                             @method('PATCH')
@@ -148,7 +151,12 @@
                                     @endif
                                 </div>
                                 @else
-                                <span class="text-xs text-gray-400 italic">Current account</span>
+                                <div class="flex flex-wrap gap-2">
+                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="px-3 py-1.5 text-xs font-medium rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 transition flex items-center">
+                                        Edit
+                                    </a>
+                                    <span class="text-xs text-gray-400 italic flex items-center">Current account</span>
+                                </div>
                                 @endif
                             </div>
                             @endforeach
@@ -170,7 +178,7 @@
                                     @foreach($users as $user)
                                     <tr class="{{ $user->trashed() ? 'bg-red-50 opacity-60' : (!$user->is_active ? 'bg-gray-50 opacity-75' : '') }}">
                                         <td class="px-4 py-3">
-                                            <div class="text-sm font-medium text-gray-900">{{ $user->name }}</div>
+                                            <a href="{{ route('admin.users.edit', $user) }}" class="text-sm font-semibold text-gray-900 hover:text-indigo-600 hover:underline block">{{ $user->name }}</a>
                                             <div class="text-xs text-gray-500">{{ $user->email }}</div>
                                         </td>
                                         <td class="px-4 py-3 text-center">
@@ -201,6 +209,9 @@
                                                         </button>
                                                     </form>
                                                 @else
+                                                    <a href="{{ route('admin.users.edit', $user->id) }}" class="px-3 py-1 text-xs font-medium rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 transition flex items-center">
+                                                        Edit
+                                                    </a>
                                                     <form method="POST" action="{{ route('admin.users.toggle', $user->id) }}">
                                                         @csrf
                                                         @method('PATCH')
@@ -225,7 +236,12 @@
                                                 @endif
                                             </div>
                                             @else
-                                            <span class="text-xs text-gray-400 italic">You</span>
+                                            <div class="flex justify-center gap-2">
+                                                <a href="{{ route('admin.users.edit', $user->id) }}" class="px-3 py-1 text-xs font-medium rounded-md bg-amber-100 text-amber-700 hover:bg-amber-200 transition flex items-center">
+                                                    Edit
+                                                </a>
+                                                <span class="text-xs text-gray-400 italic flex items-center">You</span>
+                                            </div>
                                             @endif
                                         </td>
                                     </tr>

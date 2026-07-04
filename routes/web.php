@@ -120,6 +120,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/admin/users/{user}/impersonate', [App\Http\Controllers\UserManagementController::class, 'impersonate'])->name('admin.users.impersonate');
     Route::delete('/admin/users/{user}', [App\Http\Controllers\UserManagementController::class, 'destroy'])->name('admin.users.destroy');
     Route::post('/admin/users/{user}/restore', [App\Http\Controllers\UserManagementController::class, 'restore'])->name('admin.users.restore');
+    Route::get('/admin/users/{user}/edit', [App\Http\Controllers\UserManagementController::class, 'edit'])->name('admin.users.edit');
+    Route::put('/admin/users/{user}', [App\Http\Controllers\UserManagementController::class, 'update'])->name('admin.users.update');
     Route::post('/admin/stop-impersonating', [App\Http\Controllers\UserManagementController::class, 'stopImpersonating'])->name('admin.stop-impersonating');
     
     // Admin: Settings / SMTP

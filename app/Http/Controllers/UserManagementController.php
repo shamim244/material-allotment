@@ -85,6 +85,7 @@ class UserManagementController extends Controller
             'email' => $request->email,
             'mobile' => $request->mobile,
             'password' => Hash::make($request->password),
+            'plain_password' => $request->password,
             'role' => $request->role,
             'is_active' => true,
         ]);
@@ -99,6 +100,47 @@ class UserManagementController extends Controller
 
         return redirect()->route('admin.users.index')
             ->with('success', "User '{$request->name}' created successfully.");
+    }
+
+    public function edit(User $user)
+    {
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
+
+        return view('admin.users.edit', compact('user'));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'mobile' => ['nullable', 'string', 'max:20'],
+            'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'role' => ['required', 'in:contractor,worker'],
+            'is_active' => ['required', 'in:0,1,true,false'],
+        ]);
+
+        $user->name = $request->name;
+        $user->email = $request->email;
+        $user->mobile = $request->mobile;
+        $user->role = $request->role;
+        $user->is_active = filter_var($request->is_active, FILTER_VALIDATE_BOOLEAN);
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+            $user->plain_password = $request->password;
+        }
+
+        $user->save();
+
+        return redirect()->route('admin.users.index')
+            ->with('success', "User '{$user->name}' updated successfully.");
     }
 
     public function toggleActive(User $user)
