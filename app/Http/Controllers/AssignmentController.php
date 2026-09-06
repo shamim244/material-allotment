@@ -228,4 +228,64 @@ class AssignmentController extends Controller
 
         return view('assignments.challan', compact('worker', 'meters', 'groupCounts', 'batchInfo', 'recentBatches'));
     }
+
+    /**
+     * Revoke / Cancel an entire assignment batch (Rollback mistake assignment).
+     */
+    public function revokeBatch(Request $request, string $batchId)
+    {
+        if (Auth::user()->role !== 'contractor') abort(403);
+
+        $assignments = Assignment::where('batch_id', $batchId)->with('meter', 'worker')->get();
+        if ($assignments->isEmpty()) {
+            return back()->withErrors(['error' => 'Assignment batch not found or already removed.']);
+        }
+
+        $worker = $assignments->first()->worker;
+        $workerName = $worker ? $worker->name : 'Worker';
+
+        $revokedCount = 0;
+        $skippedInstalled = 0;
+
+        DB::transaction(function () use ($assignments, $batchId, $workerName, &$revokedCount, &$skippedInstalled) {
+            foreach ($assignments as $assignment) {
+                $meter = $assignment->meter;
+                if (!$meter) {
+                    $assignment->delete();
+                    continue;
+                }
+
+                // If meter is installed, protect it
+                if (in_array($meter->status, ['installed', 'mi_complete'])) {
+                    $skippedInstalled++;
+                    continue;
+                }
+
+                // Return meter to stock
+                $meter->status = 'stock';
+                $meter->current_worker_id = null;
+                $meter->save();
+
+                // Log cancellation in MeterLog
+                MeterLog::create([
+                    'meter_id'  => $meter->id,
+                    'action'    => 'batch_revoked',
+                    'user_id'   => Auth::id(),
+                    'remark'    => "Assignment batch {$batchId} to {$workerName} was revoked by admin. Returned to stock.",
+                    'timestamp' => now(),
+                ]);
+
+                // Delete the assignment record
+                $assignment->delete();
+                $revokedCount++;
+            }
+        });
+
+        $msg = "Assignment batch cancelled: {$revokedCount} meter(s) returned to stock from {$workerName}.";
+        if ($skippedInstalled > 0) {
+            $msg .= " ({$skippedInstalled} installed meter(s) were kept intact).";
+        }
+
+        return redirect()->route('assignments.create')->with('success', $msg);
+    }
 }

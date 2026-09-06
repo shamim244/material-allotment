@@ -31,9 +31,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/stock/{meter}/status', [App\Http\Controllers\StockController::class, 'changeStatus'])->name('stock.changeStatus');
     Route::patch('/stock/{meter}/lot', [App\Http\Controllers\StockController::class, 'changeLot'])->name('stock.changeLot');
     Route::post('/stock/bulk-delete', [App\Http\Controllers\StockController::class, 'bulkDelete'])->name('stock.bulkDelete');
+    Route::post('/stock/bulk-unassign', [App\Http\Controllers\StockController::class, 'bulkUnassign'])->name('stock.bulkUnassign');
+    Route::post('/stock/bulk-restore', [App\Http\Controllers\StockController::class, 'bulkRestore'])->name('stock.bulkRestore');
+    Route::post('/stock/bulk-force-delete', [App\Http\Controllers\StockController::class, 'bulkForceDelete'])->name('stock.bulkForceDelete');
     Route::post('/stock/bulk-status', [App\Http\Controllers\StockController::class, 'bulkStatusChange'])->name('stock.bulkStatus');
     Route::post('/stock/bulk-assign', [App\Http\Controllers\StockController::class, 'bulkAssign'])->name('stock.bulkAssign');
     Route::post('/stock/bulk-export', [App\Http\Controllers\StockController::class, 'bulkExport'])->name('stock.bulkExport');
+    Route::post('/stock/{id}/restore', [App\Http\Controllers\StockController::class, 'restore'])->name('stock.restore');
+    Route::delete('/stock/{id}/force', [App\Http\Controllers\StockController::class, 'forceDelete'])->name('stock.forceDelete');
 
     // Global Search
     Route::get('/search', [App\Http\Controllers\GlobalSearchController::class, 'search'])->name('search');
@@ -44,6 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/assignments/preview-group', [App\Http\Controllers\AssignmentController::class, 'previewGroup'])->name('assignments.preview-group');
     Route::post('/assignments', [App\Http\Controllers\AssignmentController::class, 'store'])->name('assignments.store');
     Route::get('/assignments/challan/{worker}', [App\Http\Controllers\AssignmentController::class, 'challan'])->name('assignments.challan');
+    Route::delete('/assignments/batch/{batchId}', [App\Http\Controllers\AssignmentController::class, 'revokeBatch'])->name('assignments.batch.revoke');
 
     // Worker Routes
     Route::get('/my-meters', [App\Http\Controllers\WorkerController::class, 'index'])->name('worker.dashboard');

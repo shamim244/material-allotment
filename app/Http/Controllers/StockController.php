@@ -29,10 +29,14 @@ class StockController extends Controller
             'installed' => Meter::where('status', 'installed')->count(),
             'issue' => Meter::where('status', 'issue')->count(),
             'returned' => Meter::where('status', 'returned')->count(),
+            'deleted' => Meter::onlyTrashed()->count(),
         ];
 
         // Query builder
-        $query = Meter::with(['group', 'currentWorker', 'lot']);
+        $isTrash = $request->input('status') === 'deleted';
+        $query = $isTrash
+            ? Meter::onlyTrashed()->with(['group', 'currentWorker', 'lot'])
+            : Meter::with(['group', 'currentWorker', 'lot']);
 
         // Search
         if ($search = $request->input('search')) {
@@ -41,7 +45,9 @@ class StockController extends Controller
 
         // Filter by status
         if ($status = $request->input('status')) {
-            $query->where('status', $status);
+            if ($status !== 'deleted') {
+                $query->where('status', $status);
+            }
         }
 
         // Filter by group
@@ -287,28 +293,221 @@ class StockController extends Controller
             'meter_ids.*' => ['exists:meters,id'],
         ]);
 
-        $meters = Meter::whereIn('id', $request->meter_ids)->where('status', 'stock')->get();
+        $meters = Meter::whereIn('id', $request->meter_ids)->get();
         if ($meters->isEmpty()) {
-            return back()->withErrors(['error' => 'No stock meters selected for deletion.']);
+            return back()->withErrors(['error' => 'No meters selected for deletion.']);
         }
 
-        $count = $meters->count();
-        $numbers = $meters->pluck('meter_number')->join(', ');
-
-        DB::transaction(function () use ($meters) {
+        $count = 0;
+        DB::transaction(function () use ($meters, &$count) {
             foreach ($meters as $meter) {
                 MeterLog::create([
                     'meter_id'  => $meter->id,
                     'action'    => 'deleted',
                     'user_id'   => Auth::id(),
-                    'remark'    => 'Bulk deleted from lot management.',
+                    'remark'    => 'Moved to Trash by admin.',
                     'timestamp' => now(),
                 ]);
                 $meter->delete();
+                $count++;
             }
         });
 
-        return back()->with('success', "{$count} stock meter(s) deleted.");
+        return back()->with('success', "{$count} meter(s) moved to Trash. You can restore them anytime if deleted by mistake.");
+    }
+
+    /**
+     * Bulk unassign meters back to stock (Undo / Revoke assignment).
+     */
+    public function bulkUnassign(Request $request)
+    {
+        if (Auth::user()->role !== 'contractor') abort(403);
+
+        $request->validate([
+            'meter_ids'   => ['required', 'array', 'min:1'],
+            'meter_ids.*' => ['exists:meters,id'],
+        ]);
+
+        $meters = Meter::whereIn('id', $request->meter_ids)->get();
+        $unassignedCount = 0;
+        $skippedInstalled = 0;
+
+        DB::transaction(function () use ($meters, &$unassignedCount, &$skippedInstalled) {
+            foreach ($meters as $meter) {
+                // Protect installed meters from accidental unassignment
+                if (in_array($meter->status, ['installed', 'mi_complete'])) {
+                    $skippedInstalled++;
+                    continue;
+                }
+
+                $prevWorkerName = $meter->currentWorker?->name ?? 'Worker';
+                $oldStatus = $meter->status;
+
+                $meter->status = 'stock';
+                $meter->current_worker_id = null;
+                $meter->save();
+
+                MeterLog::create([
+                    'meter_id'  => $meter->id,
+                    'action'    => 'unassigned',
+                    'user_id'   => Auth::id(),
+                    'remark'    => "Assignment revoked by admin from {$prevWorkerName}. Returned to stock (was {$oldStatus}).",
+                    'timestamp' => now(),
+                ]);
+
+                $unassignedCount++;
+            }
+        });
+
+        $msg = "{$unassignedCount} meter(s) successfully unassigned and returned to Stock.";
+        if ($skippedInstalled > 0) {
+            $msg .= " ({$skippedInstalled} installed meter(s) were protected and skipped).";
+        }
+
+        return back()->with('success', $msg);
+    }
+
+    /**
+     * Restore a single soft-deleted meter.
+     */
+    public function restore($id)
+    {
+        if (Auth::user()->role !== 'contractor') abort(403);
+
+        $meter = Meter::onlyTrashed()->findOrFail($id);
+        $meter->restore();
+
+        MeterLog::create([
+            'meter_id'  => $meter->id,
+            'action'    => 'restored',
+            'user_id'   => Auth::id(),
+            'remark'    => 'Restored from Trash by admin.',
+            'timestamp' => now(),
+        ]);
+
+        return back()->with('success', "Meter {$meter->meter_number} restored to active stock.");
+    }
+
+    /**
+     * Bulk restore meters from Trash.
+     */
+    public function bulkRestore(Request $request)
+    {
+        if (Auth::user()->role !== 'contractor') abort(403);
+
+        $request->validate([
+            'meter_ids'   => ['required', 'array', 'min:1'],
+        ]);
+
+        $meters = Meter::onlyTrashed()->whereIn('id', $request->meter_ids)->get();
+        $count = 0;
+
+        DB::transaction(function () use ($meters, &$count) {
+            foreach ($meters as $meter) {
+                $meter->restore();
+                MeterLog::create([
+                    'meter_id'  => $meter->id,
+                    'action'    => 'restored',
+                    'user_id'   => Auth::id(),
+                    'remark'    => 'Bulk restored from Trash by admin.',
+                    'timestamp' => now(),
+                ]);
+                $count++;
+            }
+        });
+
+        return back()->with('success', "{$count} meter(s) successfully restored from Trash.");
+    }
+
+    /**
+     * Permanently purge a single meter and its related records.
+     */
+    public function forceDelete($id)
+    {
+        if (Auth::user()->role !== 'contractor') abort(403);
+
+        $meter = Meter::withTrashed()->findOrFail($id);
+        $meterNumber = $meter->meter_number;
+
+        DB::transaction(function () use ($meter) {
+            \App\Models\ReturnRequest::where('meter_id', $meter->id)->delete();
+            \App\Models\Assignment::where('meter_id', $meter->id)->delete();
+
+            $activation = \App\Models\MeterActivation::where('meter_id', $meter->id)->first();
+            if ($activation) {
+                \App\Models\MeterActivationImage::where('meter_activation_id', $activation->id)->delete();
+                $activation->delete();
+            }
+
+            $installation = \App\Models\InstallationDetail::where('meter_id', $meter->id)->first();
+            if ($installation) {
+                \App\Models\InstallationImage::where('installation_detail_id', $installation->id)->delete();
+                $installation->delete();
+            }
+
+            \App\Models\MeterLog::where('meter_id', $meter->id)->delete();
+            $groupId = $meter->group_id;
+
+            $meter->forceDelete();
+
+            if ($groupId) {
+                $group = \App\Models\MeterGroup::find($groupId);
+                if ($group && $group->meters()->count() === 0) {
+                    $group->delete();
+                }
+            }
+        });
+
+        return back()->with('success', "Meter {$meterNumber} permanently erased.");
+    }
+
+    /**
+     * Bulk permanently delete meters.
+     */
+    public function bulkForceDelete(Request $request)
+    {
+        if (Auth::user()->role !== 'contractor') abort(403);
+
+        $request->validate([
+            'meter_ids'   => ['required', 'array', 'min:1'],
+        ]);
+
+        $meters = Meter::withTrashed()->whereIn('id', $request->meter_ids)->get();
+        $count = 0;
+
+        DB::transaction(function () use ($meters, &$count) {
+            foreach ($meters as $meter) {
+                \App\Models\ReturnRequest::where('meter_id', $meter->id)->delete();
+                \App\Models\Assignment::where('meter_id', $meter->id)->delete();
+
+                $activation = \App\Models\MeterActivation::where('meter_id', $meter->id)->first();
+                if ($activation) {
+                    \App\Models\MeterActivationImage::where('meter_activation_id', $activation->id)->delete();
+                    $activation->delete();
+                }
+
+                $installation = \App\Models\InstallationDetail::where('meter_id', $meter->id)->first();
+                if ($installation) {
+                    \App\Models\InstallationImage::where('installation_detail_id', $installation->id)->delete();
+                    $installation->delete();
+                }
+
+                \App\Models\MeterLog::where('meter_id', $meter->id)->delete();
+                $groupId = $meter->group_id;
+
+                $meter->forceDelete();
+                $count++;
+
+                if ($groupId) {
+                    $group = \App\Models\MeterGroup::find($groupId);
+                    if ($group && $group->meters()->count() === 0) {
+                        $group->delete();
+                    }
+                }
+            }
+        });
+
+        return back()->with('success', "{$count} meter(s) permanently erased from the database.");
     }
 
     /**

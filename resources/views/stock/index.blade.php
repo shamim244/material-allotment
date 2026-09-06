@@ -60,7 +60,7 @@
             @endif
 
             <!-- Stats Cards -->
-            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3 px-4 sm:px-0">
+            <div class="grid grid-cols-3 sm:grid-cols-7 gap-3 px-4 sm:px-0">
                 <a href="{{ route('stock.index') }}" class="bg-white rounded-lg shadow p-3 text-center hover:shadow-md transition {{ !request('status') ? 'ring-2 ring-indigo-500' : '' }}">
                     <div class="text-2xl font-bold text-indigo-600">{{ $stats['total'] }}</div>
                     <div class="text-xs text-gray-500 mt-1">Total</div>
@@ -84,6 +84,10 @@
                 <a href="{{ route('stock.index', ['status' => 'returned']) }}" class="bg-white rounded-lg shadow p-3 text-center hover:shadow-md transition {{ request('status') === 'returned' ? 'ring-2 ring-gray-500' : '' }}">
                     <div class="text-2xl font-bold text-gray-600">{{ $stats['returned'] }}</div>
                     <div class="text-xs text-gray-500 mt-1">Returned</div>
+                </a>
+                <a href="{{ route('stock.index', ['status' => 'deleted']) }}" class="bg-white rounded-lg shadow p-3 text-center hover:shadow-md transition {{ request('status') === 'deleted' ? 'ring-2 ring-rose-500' : '' }}">
+                    <div class="text-2xl font-bold text-rose-600">{{ $stats['deleted'] ?? 0 }}</div>
+                    <div class="text-xs text-gray-500 mt-1">🗑 Trash</div>
                 </a>
             </div>
 
@@ -139,6 +143,18 @@
                 </form>
             </div>
 
+            @if(request('status') === 'deleted')
+                <div class="bg-rose-50 border border-rose-200 text-rose-800 px-4 py-3 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-sm mx-4 sm:mx-0 shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xl">🗑️</span>
+                        <span><strong>Recycle Bin (Trash):</strong> These meters are soft-deleted and hidden from active operations. You can restore them if deleted by mistake or purge them permanently.</span>
+                    </div>
+                    <a href="{{ route('stock.index') }}" class="text-xs font-bold text-rose-700 hover:text-rose-900 bg-rose-100 hover:bg-rose-200 px-3 py-1.5 rounded-lg transition whitespace-nowrap">
+                        ← Back to Active Stock
+                    </a>
+                </div>
+            @endif
+
             <!-- Results Count -->
             <div class="px-4 sm:px-0 text-sm text-gray-500">
                 Showing {{ $meters->firstItem() ?? 0 }}–{{ $meters->lastItem() ?? 0 }} of {{ $meters->total() }} meters
@@ -179,6 +195,23 @@
                         </div>
                             </a>
                         </div>
+                        @if(request('status') === 'deleted')
+                            <div class="mt-3 pt-2 border-t border-gray-100 flex items-center justify-end gap-2" @click.stop>
+                                <form method="POST" action="{{ route('stock.restore', $meter->id) }}" class="inline">
+                                    @csrf
+                                    <button type="submit" class="px-2.5 py-1 text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded font-semibold transition">
+                                        ♻️ Restore
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('stock.forceDelete', $meter->id) }}" class="inline" onsubmit="return confirm('⚠️ Permanently delete meter {{ $meter->meter_number }}?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="px-2.5 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded font-semibold transition">
+                                        🗑️ Purge
+                                    </button>
+                                </form>
+                            </div>
+                        @endif
                     </div>
                 @empty
                     <div class="text-center text-gray-500 py-8">No meters found.</div>
@@ -254,9 +287,27 @@
                                     {{ $meter->created_at->format('d M Y') }}
                                 </td>
                                 <td class="px-4 py-3 text-right">
-                                    <a href="{{ route('stock.show', $meter) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
-                                        View →
-                                    </a>
+                                    @if(request('status') === 'deleted')
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <form method="POST" action="{{ route('stock.restore', $meter->id) }}" class="inline">
+                                                @csrf
+                                                <button type="submit" class="px-2.5 py-1 text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 rounded font-semibold transition" title="Restore to active stock">
+                                                    ♻️ Restore
+                                                </button>
+                                            </form>
+                                            <form method="POST" action="{{ route('stock.forceDelete', $meter->id) }}" class="inline" onsubmit="return confirm('⚠️ Permanently delete meter {{ $meter->meter_number }} and all associated data?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="px-2.5 py-1 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded font-semibold transition" title="Permanently delete from database">
+                                                    🗑️ Purge
+                                                </button>
+                                            </form>
+                                        </div>
+                                    @else
+                                        <a href="{{ route('stock.show', $meter) }}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                                            View →
+                                        </a>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -292,41 +343,69 @@
 
                     <div class="w-px h-6 bg-gray-700"></div>
 
-                    <!-- Change Status -->
-                    <div x-data="{ statusOpen: false }" class="relative">
-                        <button @click="statusOpen = !statusOpen" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">
-                            📋 Status <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    @if(request('status') === 'deleted')
+                        <!-- Trash Bulk Actions -->
+                        <button @click="if(confirm('Restore ' + selectedIds.length + ' meter(s) back to active stock?')) submitBulk('{{ route('stock.bulkRestore') }}')"
+                                class="flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-semibold transition">
+                            ♻️ Restore Selected
                         </button>
-                        <div x-show="statusOpen" @click.away="statusOpen = false" x-transition x-cloak
-                             class="absolute bottom-full mb-2 left-0 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 py-1 w-40 z-50">
-                            @foreach(['stock', 'assigned', 'installed', 'issue', 'returned'] as $s)
-                                <button @click="submitBulk('{{ route('stock.bulkStatus') }}', { status: '{{ $s }}' }); statusOpen = false"
-                                        class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition">{{ ucfirst($s) }}</button>
-                            @endforeach
-                        </div>
-                    </div>
 
-                    <!-- Assign to Worker -->
-                    <div x-data="{ assignOpen: false }" class="relative">
-                        <button @click="assignOpen = !assignOpen" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">
-                            👷 Assign <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        <button @click="if(confirm('⚠️ Permanently delete ' + selectedIds.length + ' meter(s)? This will erase all history and CANNOT be undone!')) submitBulk('{{ route('stock.bulkForceDelete') }}')"
+                                class="flex items-center gap-1.5 px-3.5 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-semibold transition">
+                            🗑️ Permanently Delete
                         </button>
-                        <div x-show="assignOpen" @click.away="assignOpen = false" x-transition x-cloak
-                             class="absolute bottom-full mb-2 left-0 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 py-1 w-48 max-h-60 overflow-y-auto z-50">
-                            @foreach($workers as $worker)
-                                <button @click="submitBulk('{{ route('stock.bulkAssign') }}', { worker_id: '{{ $worker->id }}' }); assignOpen = false"
-                                        class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition">{{ $worker->name }}</button>
-                            @endforeach
-                            @if($workers->isEmpty())
-                                <div class="px-4 py-2 text-sm text-gray-400">No workers</div>
-                            @endif
+                    @else
+                        <!-- Active Stock Bulk Actions -->
+                        <!-- Change Status -->
+                        <div x-data="{ statusOpen: false }" class="relative">
+                            <button @click="statusOpen = !statusOpen" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">
+                                📋 Status <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="statusOpen" @click.away="statusOpen = false" x-transition x-cloak
+                                 class="absolute bottom-full mb-2 left-0 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 py-1 w-40 z-50">
+                                @foreach(['stock', 'assigned', 'installed', 'issue', 'returned'] as $s)
+                                    <button @click="submitBulk('{{ route('stock.bulkStatus') }}', { status: '{{ $s }}' }); statusOpen = false"
+                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition">{{ ucfirst($s) }}</button>
+                                @endforeach
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Export -->
-                    <button @click="submitBulk('{{ route('stock.bulkExport') }}')" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm transition">
-                        📥 Export CSV
-                    </button>
+                        <!-- Assign to Worker -->
+                        <div x-data="{ assignOpen: false }" class="relative">
+                            <button @click="assignOpen = !assignOpen" class="flex items-center gap-1.5 px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-lg text-sm transition">
+                                👷 Assign <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                            </button>
+                            <div x-show="assignOpen" @click.away="assignOpen = false" x-transition x-cloak
+                                 class="absolute bottom-full mb-2 left-0 bg-white text-gray-800 rounded-xl shadow-xl border border-gray-200 py-1 w-48 max-h-60 overflow-y-auto z-50">
+                                @foreach($workers as $worker)
+                                    <button @click="submitBulk('{{ route('stock.bulkAssign') }}', { worker_id: '{{ $worker->id }}' }); assignOpen = false"
+                                            class="w-full text-left px-4 py-2 text-sm hover:bg-gray-50 transition">{{ $worker->name }}</button>
+                                @endforeach
+                                @if($workers->isEmpty())
+                                    <div class="px-4 py-2 text-sm text-gray-400">No workers</div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Unassign to Stock (Undo Assignment) -->
+                        <button @click="if(confirm('Revoke assignment for ' + selectedIds.length + ' selected meter(s) and return them to Stock?')) submitBulk('{{ route('stock.bulkUnassign') }}')"
+                                class="flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 hover:bg-amber-500 rounded-lg text-sm font-medium transition"
+                                title="Revoke worker assignment and return meters to stock">
+                            ↩️ Unassign
+                        </button>
+
+                        <!-- Export -->
+                        <button @click="submitBulk('{{ route('stock.bulkExport') }}')" class="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm transition">
+                            📥 Export CSV
+                        </button>
+
+                        <!-- Delete to Trash -->
+                        <button @click="if(confirm('Move ' + selectedIds.length + ' meter(s) to Trash? You can restore them anytime if deleted by mistake.')) submitBulk('{{ route('stock.bulkDelete') }}')"
+                                class="flex items-center gap-1.5 px-3 py-1.5 bg-red-600 hover:bg-red-500 rounded-lg text-sm font-medium transition"
+                                title="Move selected meters to Trash">
+                            🗑️ Delete
+                        </button>
+                    @endif
 
                     <div class="flex-1"></div>
 

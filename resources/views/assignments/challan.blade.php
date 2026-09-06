@@ -77,6 +77,17 @@
             @endif
 
             <a href="{{ route('assignments.challan', ['worker' => $worker->id, 'view' => 'all']) }}" class="btn btn-all" title="All meters currently with this worker">📋 All Meters</a>
+
+            @if(!empty($batchInfo['id']))
+                <form method="POST" action="{{ route('assignments.batch.revoke', $batchInfo['id']) }}" style="display: inline; margin: 0;"
+                      onsubmit="return confirm('⚠️ Are you sure you want to cancel this entire assignment batch? All uninstalled meters will be returned to Stock immediately.')">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn" style="background: #ef4444; color: #fff;" title="Rollback this assignment batch">
+                        ❌ Revoke / Undo Batch
+                    </button>
+                </form>
+            @endif
         </div>
         <button onclick="window.print()" class="btn btn-print">🖨️ Print Challan</button>
     </div>
