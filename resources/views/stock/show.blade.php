@@ -166,7 +166,7 @@
                     <h3 class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Delete Meter</h3>
                     @if($meter->status === 'stock')
                         <form method="POST" action="{{ route('stock.destroy', $meter) }}"
-                              onsubmit="return confirm('Are you sure you want to delete meter {{ $meter->meter_number }}?')">
+                               onsubmit="return confirm('Are you sure you want to delete meter {{ $meter->meter_number }}?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="w-full px-4 py-2 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition">
@@ -174,7 +174,17 @@
                             </button>
                         </form>
                     @else
-                        <p class="text-sm text-gray-500">Can only delete meters with status <strong>stock</strong>. Currently: <strong>{{ ucfirst($meter->status) }}</strong>.</p>
+                        <form method="POST" action="{{ route('stock.destroy', $meter) }}"
+                               onsubmit="return confirm('⚠️ WARNING: This meter is currently {{ strtoupper($meter->status) }}. Deleting it will permanently erase all associated assignments, installation records, image uploads, and logs. This action CANNOT be undone. Are you sure you want to force delete this meter and all its work history?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-full px-4 py-2 bg-red-50 hover:bg-red-100 border border-red-200 text-red-700 text-sm font-semibold rounded-md transition">
+                                ⚠️ Force Delete Meter & History
+                            </button>
+                        </form>
+                        <p class="text-xs text-gray-400 mt-2 text-center">
+                            Allows cleaning up mistakes. Removes all logs, images, return requests, and assignments.
+                        </p>
                     @endif
                 </div>
             </div>

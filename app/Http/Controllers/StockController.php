@@ -457,18 +457,54 @@ class StockController extends Controller
     }
 
     /**
-     * Delete meter (only if status = stock).
+     * Delete meter (with cascading cleanup of all logs and assignments).
      */
     public function destroy(Meter $meter)
     {
-        if ($meter->status !== 'stock') {
-            return back()->withErrors(['error' => 'Only meters in stock can be deleted. This meter is currently: ' . $meter->status]);
-        }
+        if (Auth::user()->role !== 'contractor') abort(403);
 
         $meterNumber = $meter->meter_number;
-        $meter->delete();
 
-        return redirect()->route('stock.index')->with('success', "Meter {$meterNumber} deleted successfully.");
+        DB::transaction(function () use ($meter) {
+            // Cascade delete all related records
+            // 1. Return requests
+            \App\Models\ReturnRequest::where('meter_id', $meter->id)->delete();
+            
+            // 2. Assignment logs
+            \App\Models\Assignment::where('meter_id', $meter->id)->delete();
+            
+            // 3. Activations and activation images
+            $activation = \App\Models\MeterActivation::where('meter_id', $meter->id)->first();
+            if ($activation) {
+                \App\Models\MeterActivationImage::where('meter_activation_id', $activation->id)->delete();
+                $activation->delete();
+            }
+            
+            // 4. Installation details and installation images
+            $installation = \App\Models\InstallationDetail::where('meter_id', $meter->id)->first();
+            if ($installation) {
+                \App\Models\InstallationImage::where('installation_detail_id', $installation->id)->delete();
+                $installation->delete();
+            }
+
+            // 5. Meter logs
+            \App\Models\MeterLog::where('meter_id', $meter->id)->delete();
+
+            $groupId = $meter->group_id;
+
+            // 6. Delete the meter itself
+            $meter->delete();
+
+            // 7. Clean up empty meter groups
+            if ($groupId) {
+                $group = \App\Models\MeterGroup::find($groupId);
+                if ($group && $group->meters()->count() === 0) {
+                    $group->delete();
+                }
+            }
+        });
+
+        return redirect()->route('stock.index')->with('success', "Meter {$meterNumber} and all its associated logs, assignments, and work records were cleanly deleted.");
     }
 
     /**
