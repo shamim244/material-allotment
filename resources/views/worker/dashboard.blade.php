@@ -216,7 +216,42 @@
                                     </div>
 
                                     <!-- Installation Modal -->
-                                    <div x-show="showInstallModal" x-transition class="mt-4 border-t pt-4" x-data="{ activePanel: '', installType: 'nsc', previews: [], detailPreviews: [] }">
+                                    <div x-show="showInstallModal" x-transition class="mt-4 border-t pt-4" x-data="{
+                                        activePanel: '',
+                                        installType: 'nsc',
+                                        previews: [],
+                                        detailPreviews: [],
+                                        compressing: false,
+                                        compressInfo: '',
+                                        async handleFiles(event, target) {
+                                            const input = event.target;
+                                            if (!input.files || input.files.length === 0) return;
+                                            this.compressing = true;
+                                            this.compressInfo = '⚡ Optimizing photos...';
+                                            
+                                            let originalTotal = 0;
+                                            let compressedTotal = 0;
+                                            for (const f of input.files) originalTotal += f.size;
+                                            
+                                            const compressed = await window.compressImageFileList(input.files, { maxWidth: 1600, maxHeight: 1600, quality: 0.82 });
+                                            for (const f of compressed) compressedTotal += f.size;
+                                            
+                                            const dt = new DataTransfer();
+                                            compressed.forEach(f => dt.items.add(f));
+                                            input.files = dt.files;
+                                            
+                                            const urls = compressed.map(f => URL.createObjectURL(f));
+                                            if (target === 'quick') {
+                                                this.previews = urls;
+                                            } else {
+                                                this.detailPreviews = urls;
+                                            }
+                                            
+                                            const savedPct = Math.round((1 - compressedTotal / (originalTotal || 1)) * 100);
+                                            this.compressInfo = `${compressed.length} photo(s) optimized: ${window.formatBytes(originalTotal)} → ${window.formatBytes(compressedTotal)} (${savedPct > 0 ? savedPct + '% saved' : 'optimized'})`;
+                                            this.compressing = false;
+                                        }
+                                    }">
                                         <div class="text-sm font-semibold text-gray-700 mb-3">Installation Options</div>
 
                                         <!-- Type Selection (shared between both panels) -->
@@ -268,8 +303,16 @@
                                                     <div class="mb-3">
                                                         <label class="block text-xs font-medium text-gray-600 mb-1">📷 Photos <span class="text-gray-400">(optional)</span></label>
                                                         <input type="file" name="install_images[]" multiple accept="image/*" capture="environment"
-                                                            @change="previews = [...$event.target.files].map(f => URL.createObjectURL(f))"
+                                                            @change="handleFiles($event, 'quick')"
                                                             class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                                        <div x-show="compressing" class="text-xs text-indigo-600 font-medium animate-pulse mt-1.5 flex items-center gap-1.5">
+                                                            <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                            <span>Optimizing photos...</span>
+                                                        </div>
+                                                        <div x-show="!compressing && compressInfo && previews.length > 0" class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1 mt-1.5 font-medium flex items-center gap-1">
+                                                            <span>✓</span>
+                                                            <span x-text="compressInfo"></span>
+                                                        </div>
                                                         <div x-show="previews.length > 0" class="flex flex-wrap gap-2 mt-2">
                                                             <template x-for="(src, i) in previews" :key="i">
                                                                 <img :src="src" class="w-14 h-14 object-cover rounded-md border">
@@ -277,10 +320,11 @@
                                                         </div>
                                                     </div>
 
-                                                    <button type="submit" class="w-full text-white py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2"
-                                                        :class="installType === 'replacement' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-emerald-500 hover:bg-emerald-600'">
+                                                    <button type="submit" :disabled="compressing"
+                                                        class="w-full text-white py-2.5 rounded-lg text-sm font-medium transition flex items-center justify-center space-x-2"
+                                                        :class="compressing ? 'opacity-50 cursor-not-allowed bg-gray-400' : (installType === 'replacement' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-emerald-500 hover:bg-emerald-600')">
                                                         <span>⚡</span>
-                                                        <span x-text="installType === 'replacement' ? 'Quick Replacement' : 'Quick Install'"></span>
+                                                        <span x-text="compressing ? 'Optimizing...' : (installType === 'replacement' ? 'Quick Replacement' : 'Quick Install')"></span>
                                                     </button>
                                                 </form>
                                             </div>
@@ -442,8 +486,16 @@
                                                         <div>
                                                             <label class="block text-xs font-medium text-gray-600 mb-1">📷 Installation Photos <span class="text-gray-400">(optional, max 10)</span></label>
                                                             <input type="file" name="install_images[]" multiple accept="image/*" capture="environment"
-                                                                @change="detailPreviews = [...$event.target.files].map(f => URL.createObjectURL(f))"
+                                                                @change="handleFiles($event, 'detailed')"
                                                                 class="w-full text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-medium file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                                                            <div x-show="compressing" class="text-xs text-indigo-600 font-medium animate-pulse mt-1.5 flex items-center gap-1.5">
+                                                                <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                                <span>Optimizing photos...</span>
+                                                            </div>
+                                                            <div x-show="!compressing && compressInfo && detailPreviews.length > 0" class="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2 py-1 mt-1.5 font-medium flex items-center gap-1">
+                                                                <span>✓</span>
+                                                                <span x-text="compressInfo"></span>
+                                                            </div>
                                                             <div x-show="detailPreviews.length > 0" class="flex flex-wrap gap-2 mt-2">
                                                                 <template x-for="(src, i) in detailPreviews" :key="i">
                                                                     <img :src="src" class="w-14 h-14 object-cover rounded-md border">
@@ -451,9 +503,10 @@
                                                             </div>
                                                         </div>
 
-                                                        <button type="submit" class="w-full text-white py-2.5 rounded-lg text-sm font-bold transition"
-                                                            :class="installType === 'replacement' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700'">
-                                                            <span x-text="installType === 'replacement' ? '🔄 Submit Replacement' : '✓ Submit NSC Install'"></span>
+                                                        <button type="submit" :disabled="compressing"
+                                                            class="w-full text-white py-2.5 rounded-lg text-sm font-bold transition"
+                                                            :class="compressing ? 'opacity-50 cursor-not-allowed bg-gray-400' : (installType === 'replacement' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-green-600 hover:bg-green-700')">
+                                                            <span x-text="compressing ? 'Optimizing Photos...' : (installType === 'replacement' ? '🔄 Submit Replacement' : '✓ Submit NSC Install')"></span>
                                                         </button>
                                                     </div>
                                                 </form>

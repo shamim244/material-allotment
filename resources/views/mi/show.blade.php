@@ -314,7 +314,36 @@
                 <div class="p-4 sm:p-6">
                     <h4 class="text-sm font-semibold text-gray-700 mb-4">Upload Images</h4>
                     <form method="POST" action="{{ route('mi.upload', $activation->id) }}" enctype="multipart/form-data"
-                          x-data="{ previews: [], fileCount: 0 }">
+                          x-data="{
+                              previews: [],
+                              fileCount: 0,
+                              compressing: false,
+                              compressInfo: '',
+                              async handleFiles(event) {
+                                  const input = event.target;
+                                  if (!input.files || input.files.length === 0) return;
+                                  this.compressing = true;
+                                  this.compressInfo = '⚡ Optimizing photos...';
+
+                                  let originalTotal = 0;
+                                  let compressedTotal = 0;
+                                  for (const f of input.files) originalTotal += f.size;
+
+                                  const compressed = await window.compressImageFileList(input.files, { maxWidth: 1600, maxHeight: 1600, quality: 0.82 });
+                                  for (const f of compressed) compressedTotal += f.size;
+
+                                  const dt = new DataTransfer();
+                                  compressed.forEach(f => dt.items.add(f));
+                                  input.files = dt.files;
+
+                                  this.previews = compressed.map(f => URL.createObjectURL(f));
+                                  this.fileCount = compressed.length;
+
+                                  const savedPct = Math.round((1 - compressedTotal / (originalTotal || 1)) * 100);
+                                  this.compressInfo = `${compressed.length} photo(s) optimized: ${window.formatBytes(originalTotal)} → ${window.formatBytes(compressedTotal)} (${savedPct > 0 ? savedPct + '% saved' : 'optimized'})`;
+                                  this.compressing = false;
+                              }
+                          }">
                         @csrf
                         
                         <div class="space-y-4">
@@ -328,13 +357,7 @@
                                         </div>
                                     </div>
                                     <input type="file" name="images[]" multiple accept="image/*" class="hidden"
-                                        @change="fileCount = $event.target.files.length; 
-                                            previews = [];
-                                            Array.from($event.target.files).forEach(file => {
-                                                let reader = new FileReader();
-                                                reader.onload = e => previews.push(e.target.result);
-                                                reader.readAsDataURL(file);
-                                            });">
+                                        @change="handleFiles($event)">
                                 </label>
 
                                 <label class="flex-1 cursor-pointer">
@@ -345,13 +368,20 @@
                                         </div>
                                     </div>
                                     <input type="file" name="images[]" accept="image/*" capture="environment" class="hidden"
-                                        @change="fileCount += $event.target.files.length;
-                                            Array.from($event.target.files).forEach(file => {
-                                                let reader = new FileReader();
-                                                reader.onload = e => previews.push(e.target.result);
-                                                reader.readAsDataURL(file);
-                                            });">
+                                        @change="handleFiles($event)">
                                 </label>
+                            </div>
+
+                            <!-- Compression status indicator -->
+                            <div x-show="compressing" class="text-xs text-blue-600 font-medium animate-pulse flex items-center gap-1.5 p-2 bg-blue-50 rounded-lg border border-blue-200">
+                                <svg class="w-4 h-4 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <span>Optimizing photos for fast upload...</span>
+                            </div>
+
+                            <!-- Compression savings badge -->
+                            <div x-show="!compressing && compressInfo && previews.length > 0" class="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg p-2.5 font-medium flex items-center gap-1.5">
+                                <span class="text-emerald-600 font-bold">✓</span>
+                                <span x-text="compressInfo"></span>
                             </div>
 
                             <!-- Preview -->
@@ -363,8 +393,10 @@
 
                             <p x-show="fileCount > 0" class="text-xs text-gray-500" x-text="fileCount + ' file(s) selected'"></p>
 
-                            <button type="submit" x-show="fileCount > 0" class="w-full bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-                                Upload Images
+                            <button type="submit" x-show="fileCount > 0" :disabled="compressing"
+                                class="w-full text-white py-2.5 rounded-lg text-sm font-medium transition"
+                                :class="compressing ? 'opacity-50 cursor-not-allowed bg-gray-400' : 'bg-blue-600 hover:bg-blue-700'">
+                                <span x-text="compressing ? 'Optimizing Photos...' : 'Upload Images'"></span>
                             </button>
                         </div>
                     </form>

@@ -459,6 +459,90 @@
     </div>
 </div>
 
+<script>
+    /**
+     * Client-Side Image Compression Utility
+     * Compresses images in-browser via offscreen HTML5 canvas to reduce mobile upload sizes
+     * and prevent 413 / timeout errors on slow connections.
+     */
+    window.compressImage = function(file, options = {}) {
+        const maxWidth = options.maxWidth || 1600;
+        const maxHeight = options.maxHeight || 1600;
+        const quality = options.quality !== undefined ? options.quality : 0.82;
+
+        return new Promise((resolve) => {
+            if (!file || !file.type || !file.type.startsWith('image/')) {
+                return resolve(file);
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    let width = img.naturalWidth || img.width;
+                    let height = img.naturalHeight || img.height;
+
+                    if (width > maxWidth || height > maxHeight) {
+                        if (width / height > maxWidth / maxHeight) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        } else {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+
+                    const canvas = document.createElement('canvas');
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob(function(blob) {
+                        if (!blob || blob.size >= file.size) {
+                            // If compression doesn't decrease file size, keep original
+                            return resolve(file);
+                        }
+                        const newFileName = file.name.replace(/\.[^.]+$/, '') + '.jpg';
+                        const compressedFile = new File([blob], newFileName, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        compressedFile._originalSize = file.size;
+                        compressedFile._compressedSize = blob.size;
+                        resolve(compressedFile);
+                    }, 'image/jpeg', quality);
+                };
+                img.onerror = function() {
+                    resolve(file);
+                };
+                img.src = e.target.result;
+            };
+            reader.onerror = function() {
+                resolve(file);
+            };
+            reader.readAsDataURL(file);
+        });
+    };
+
+    window.compressImageFileList = async function(fileList, options = {}) {
+        const files = Array.from(fileList || []);
+        const compressed = [];
+        for (const f of files) {
+            compressed.push(await window.compressImage(f, options));
+        }
+        return compressed;
+    };
+
+    window.formatBytes = function(bytes) {
+        if (!bytes || bytes === 0) return '0 B';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+</script>
+
 @stack('scripts')
 </body>
 </html>
