@@ -19,7 +19,7 @@ class CheckActiveUser
             }
 
             // Check if individual user is deactivated
-            if (!$user->is_active) {
+            if (! $user->is_active) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();

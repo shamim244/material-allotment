@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Meter;
 use App\Models\Assignment;
 use App\Models\InstallationDetail;
-use App\Models\ReturnRequest;
+use App\Models\Meter;
 use App\Models\MeterActivation;
-use Illuminate\Http\Request;
+use App\Models\ReturnRequest;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 

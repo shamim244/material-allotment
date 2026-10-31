@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\InstallationDetail;
-use App\Models\InstallationImage;
 use App\Models\InstallationFieldConfig;
+use App\Models\InstallationImage;
 use App\Models\Meter;
 use App\Models\MeterActivation;
 use App\Models\MeterLog;
@@ -23,7 +23,7 @@ class WorkerController extends Controller
         // Build meter query based on role
         if ($isAdmin) {
             $statuses = ['assigned', 'issue'];
-            if (!$request->filled('worker_id') || $request->worker_id === 'unassigned') {
+            if (! $request->filled('worker_id') || $request->worker_id === 'unassigned') {
                 $statuses[] = 'stock';
             }
             $query = Meter::whereIn('status', $statuses);
@@ -65,11 +65,11 @@ class WorkerController extends Controller
         }
 
         $stats = [
-            'assigned'       => (clone $statsQuery)->where('status', 'assigned')->count(),
-            'installed'      => (clone $statsQuery)->where('status', 'installed')->count(),
-            'issues'         => (clone $statsQuery)->where('status', 'issue')->count(),
+            'assigned' => (clone $statsQuery)->where('status', 'assigned')->count(),
+            'installed' => (clone $statsQuery)->where('status', 'installed')->count(),
+            'issues' => (clone $statsQuery)->where('status', 'issue')->count(),
             'return_pending' => (clone $statsQuery)->where('status', 'return_pending')->count(),
-            'stock'          => $isAdmin ? (clone $statsQuery)->where('status', 'stock')->count() : 0,
+            'stock' => $isAdmin ? (clone $statsQuery)->where('status', 'stock')->count() : 0,
         ];
 
         $assignedMeters = $query->with(['group', 'currentWorker'])
@@ -127,16 +127,16 @@ class WorkerController extends Controller
             } else {
                 // NSC: use fieldConfig for request_number
                 if ($fieldConfigs->has('request_number') && $fieldConfigs['request_number']->is_enabled) {
-                    $installRules['request_number'] = $fieldConfigs['request_number']->is_required 
-                        ? ['required', 'string', 'max:100'] 
+                    $installRules['request_number'] = $fieldConfigs['request_number']->is_required
+                        ? ['required', 'string', 'max:100']
                         : ['nullable', 'string', 'max:100'];
                 }
             }
 
             // Shared fields
             if ($fieldConfigs->has('mobile_number') && $fieldConfigs['mobile_number']->is_enabled) {
-                $installRules['mobile_number'] = $fieldConfigs['mobile_number']->is_required 
-                    ? ['required', 'string', 'max:20'] 
+                $installRules['mobile_number'] = $fieldConfigs['mobile_number']->is_required
+                    ? ['required', 'string', 'max:20']
                     : ['nullable', 'string', 'max:20'];
             }
 
@@ -147,8 +147,8 @@ class WorkerController extends Controller
             }
 
             if ($fieldConfigs->has('remark') && $fieldConfigs['remark']->is_enabled) {
-                $installRules['install_remark'] = $fieldConfigs['remark']->is_required 
-                    ? ['required', 'string', 'max:500'] 
+                $installRules['install_remark'] = $fieldConfigs['remark']->is_required
+                    ? ['required', 'string', 'max:500']
                     : ['nullable', 'string', 'max:500'];
             }
 
@@ -172,7 +172,7 @@ class WorkerController extends Controller
 
         DB::transaction(function () use ($request, $meter, $user) {
             $oldStatus = $meter->status;
-            
+
             $meter->update([
                 'status' => $request->status,
             ]);
@@ -181,7 +181,7 @@ class WorkerController extends Controller
                 'meter_id' => $meter->id,
                 'action' => 'status_change',
                 'user_id' => $user->id,
-                'remark' => "Changed status from $oldStatus to {$request->status}. " . $request->remark,
+                'remark' => "Changed status from $oldStatus to {$request->status}. ".$request->remark,
                 'timestamp' => now(),
             ]);
 

@@ -19,7 +19,7 @@ class AssignmentController extends Controller
         $workers = User::where('role', 'worker')
             ->where('is_active', true)
             ->withCount(['assignments as active_meter_count' => function ($q) {
-                $q->whereHas('meter', fn($m) => $m->where('status', 'assigned'));
+                $q->whereHas('meter', fn ($m) => $m->where('status', 'assigned'));
             }])
             ->orderBy('name')
             ->get();
@@ -130,7 +130,7 @@ class AssignmentController extends Controller
                     'meter_id' => $meter->id,
                     'action' => 'assigned',
                     'user_id' => Auth::id(),
-                    'remark' => 'Assigned to ' . $worker->name,
+                    'remark' => 'Assigned to '.$worker->name,
                     'timestamp' => now(),
                 ]);
 
@@ -152,7 +152,7 @@ class AssignmentController extends Controller
                 \Illuminate\Support\Facades\Mail::to($worker->email)->send(new \App\Mail\NewAssignmentMail($worker->name, $assignedCount, $lotName));
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to send assignment email: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Failed to send assignment email: '.$e->getMessage());
         }
 
         return redirect()->route('assignments.challan', ['worker' => $worker->id, 'batch' => $batchId])
@@ -166,7 +166,9 @@ class AssignmentController extends Controller
      */
     public function challan(Request $request, User $worker)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $batchId = $request->input('batch');
 
@@ -188,7 +190,7 @@ class AssignmentController extends Controller
 
             $meters = $assignments->map->meter->filter();
             $batchInfo = [
-                'id'   => $batchId,
+                'id' => $batchId,
                 'date' => $assignments->first()?->assigned_at,
             ];
         } else {
@@ -201,7 +203,7 @@ class AssignmentController extends Controller
             if ($latestBatch) {
                 return redirect()->route('assignments.challan', [
                     'worker' => $worker->id,
-                    'batch'  => $latestBatch->batch_id,
+                    'batch' => $latestBatch->batch_id,
                 ]);
             }
 
@@ -224,7 +226,7 @@ class AssignmentController extends Controller
             ->limit(20)
             ->get();
 
-        $groupCounts = $meters->groupBy(fn($m) => $m->group?->name ?? 'Ungrouped')->map->count();
+        $groupCounts = $meters->groupBy(fn ($m) => $m->group?->name ?? 'Ungrouped')->map->count();
 
         return view('assignments.challan', compact('worker', 'meters', 'groupCounts', 'batchInfo', 'recentBatches'));
     }
@@ -234,7 +236,9 @@ class AssignmentController extends Controller
      */
     public function revokeBatch(Request $request, string $batchId)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $assignments = Assignment::where('batch_id', $batchId)->with('meter', 'worker')->get();
         if ($assignments->isEmpty()) {
@@ -250,14 +254,16 @@ class AssignmentController extends Controller
         DB::transaction(function () use ($assignments, $batchId, $workerName, &$revokedCount, &$skippedInstalled) {
             foreach ($assignments as $assignment) {
                 $meter = $assignment->meter;
-                if (!$meter) {
+                if (! $meter) {
                     $assignment->delete();
+
                     continue;
                 }
 
                 // If meter is installed, protect it
                 if (in_array($meter->status, ['installed', 'mi_complete'])) {
                     $skippedInstalled++;
+
                     continue;
                 }
 
@@ -268,10 +274,10 @@ class AssignmentController extends Controller
 
                 // Log cancellation in MeterLog
                 MeterLog::create([
-                    'meter_id'  => $meter->id,
-                    'action'    => 'batch_revoked',
-                    'user_id'   => Auth::id(),
-                    'remark'    => "Assignment batch {$batchId} to {$workerName} was revoked by admin. Returned to stock.",
+                    'meter_id' => $meter->id,
+                    'action' => 'batch_revoked',
+                    'user_id' => Auth::id(),
+                    'remark' => "Assignment batch {$batchId} to {$workerName} was revoked by admin. Returned to stock.",
                     'timestamp' => now(),
                 ]);
 

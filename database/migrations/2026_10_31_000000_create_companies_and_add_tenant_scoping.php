@@ -2,10 +2,10 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -53,7 +53,7 @@ return new class extends Migration
 
         // 4. Create master Super Admin user (company_id is null)
         $superAdminExists = DB::table('users')->where('email', 'superadmin@example.com')->exists();
-        if (!$superAdminExists) {
+        if (! $superAdminExists) {
             DB::table('users')->insert([
                 'company_id' => null,
                 'name' => 'Super Admin',

@@ -155,7 +155,7 @@ class MapTest extends TestCase
         // Filter with date range (from 3 days ago to today)
         $response = $this->actingAs($contractor)->get(route('admin.map.index', [
             'date_from' => now()->subDays(3)->format('Y-m-d'),
-            'date_to' => now()->format('Y-m-d')
+            'date_to' => now()->format('Y-m-d'),
         ]));
 
         $response->assertStatus(200);

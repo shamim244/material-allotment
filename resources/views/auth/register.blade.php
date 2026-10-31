@@ -4,14 +4,38 @@
 
         <!-- Name -->
         <div>
-            <x-input-label for="name" :value="__('Name')" />
+            <x-input-label for="name" :value="__('Full Name')" />
             <x-text-input id="name" class="block mt-1 w-full" type="text" name="name" :value="old('name')" required autofocus autocomplete="name" />
             <x-input-error :messages="$errors->get('name')" class="mt-2" />
         </div>
 
+        <!-- Agency / Company Name -->
+        <div class="mt-4">
+            <div class="flex items-center justify-between mb-1">
+                <x-input-label for="company_name" :value="__('Agency / Company Name (Contractors)')" />
+                <span class="text-xs text-slate-400">Optional for staff</span>
+            </div>
+            <x-text-input id="company_name" class="block mt-1 w-full" type="text" name="company_name" :value="old('company_name')" placeholder="e.g. Apex Power Infrastructure" />
+            <x-input-error :messages="$errors->get('company_name')" class="mt-2" />
+        </div>
+
+        <!-- Referral Code -->
+        <div class="mt-4">
+            <div class="flex items-center justify-between mb-1">
+                <x-input-label for="referral_code" :value="__('Referral Code (Optional)')" />
+                @if(!empty($referralCode ?? request('ref')))
+                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-300">
+                        Referral Applied
+                    </span>
+                @endif
+            </div>
+            <x-text-input id="referral_code" class="block mt-1 w-full font-mono text-sm" type="text" name="referral_code" :value="old('referral_code', $referralCode ?? request('ref'))" placeholder="e.g. NCC-REF-XXX" />
+            <x-input-error :messages="$errors->get('referral_code')" class="mt-2" />
+        </div>
+
         <!-- Email Address -->
         <div class="mt-4">
-            <x-input-label for="email" :value="__('Email')" />
+            <x-input-label for="email" :value="__('Work Email Address')" />
             <x-text-input id="email" class="block mt-1 w-full" type="email" name="email" :value="old('email')" required autocomplete="username" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>

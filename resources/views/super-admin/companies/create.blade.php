@@ -59,6 +59,13 @@
                         <input type="text" name="address" value="{{ old('address') }}" placeholder="e.g. Patna Rural Circle, Bihar"
                                class="w-full rounded-xl border-gray-200 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                     </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Referred By Referral Code <span class="text-gray-400 font-normal">(Optional)</span></label>
+                        <input type="text" name="referred_by_code" value="{{ old('referred_by_code', request('ref')) }}" placeholder="e.g. NCC-REF-ABC123"
+                               class="w-full rounded-xl border-gray-200 text-sm font-mono focus:border-indigo-500 focus:ring-indigo-500 @error('referred_by_code') border-rose-300 @enderror">
+                        @error('referred_by_code')<p class="text-xs text-rose-500 mt-1">{{ $message }}</p>@enderror
+                    </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-gray-100">

@@ -40,7 +40,7 @@ class StockController extends Controller
 
         // Search
         if ($search = $request->input('search')) {
-            $query->where('meter_number', 'like', '%' . $search . '%');
+            $query->where('meter_number', 'like', '%'.$search.'%');
         }
 
         // Filter by status
@@ -154,12 +154,12 @@ class StockController extends Controller
                 'meter_id' => $meter->id,
                 'action' => 'reassigned',
                 'user_id' => Auth::id(),
-                'remark' => 'Reassigned from ' . ($oldWorker ? $oldWorker->name : 'none') . ' to ' . $newWorker->name,
+                'remark' => 'Reassigned from '.($oldWorker ? $oldWorker->name : 'none').' to '.$newWorker->name,
                 'timestamp' => now(),
             ]);
         });
 
-        return back()->with('success', 'Meter reassigned to ' . $newWorker->name . '.');
+        return back()->with('success', 'Meter reassigned to '.$newWorker->name.'.');
     }
 
     /**
@@ -181,7 +181,7 @@ class StockController extends Controller
         $newStatus = $request->status;
 
         if ($oldStatus === $newStatus) {
-            return back()->with('info', 'Status is already ' . $newStatus . '.');
+            return back()->with('info', 'Status is already '.$newStatus.'.');
         }
 
         DB::transaction(function () use ($request, $meter, $oldStatus, $newStatus) {
@@ -236,7 +236,7 @@ class StockController extends Controller
     public function update(Request $request, Meter $meter)
     {
         $request->validate([
-            'meter_number' => ['required', 'string', 'max:50', 'unique:meters,meter_number,' . $meter->id],
+            'meter_number' => ['required', 'string', 'max:50', 'unique:meters,meter_number,'.$meter->id],
         ]);
 
         $oldNumber = $meter->meter_number;
@@ -259,7 +259,9 @@ class StockController extends Controller
      */
     public function changeLot(Request $request, Meter $meter)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
             'lot_id' => ['nullable', 'exists:lots,id'],
@@ -271,14 +273,14 @@ class StockController extends Controller
 
         $newLot = $newLotId ? Lot::find($newLotId) : null;
         MeterLog::create([
-            'meter_id'  => $meter->id,
-            'action'    => 'lot_changed',
-            'user_id'   => Auth::id(),
-            'remark'    => 'Lot changed from ' . ($oldLot?->lot_number ?? 'None') . ' to ' . ($newLot?->lot_number ?? 'None'),
+            'meter_id' => $meter->id,
+            'action' => 'lot_changed',
+            'user_id' => Auth::id(),
+            'remark' => 'Lot changed from '.($oldLot?->lot_number ?? 'None').' to '.($newLot?->lot_number ?? 'None'),
             'timestamp' => now(),
         ]);
 
-        return back()->with('success', "Meter moved to " . ($newLot?->lot_number ?? 'no lot') . ".");
+        return back()->with('success', 'Meter moved to '.($newLot?->lot_number ?? 'no lot').'.');
     }
 
     /**
@@ -286,10 +288,12 @@ class StockController extends Controller
      */
     public function bulkDelete(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'meter_ids'   => ['required', 'array', 'min:1'],
+            'meter_ids' => ['required', 'array', 'min:1'],
             'meter_ids.*' => ['exists:meters,id'],
         ]);
 
@@ -302,10 +306,10 @@ class StockController extends Controller
         DB::transaction(function () use ($meters, &$count) {
             foreach ($meters as $meter) {
                 MeterLog::create([
-                    'meter_id'  => $meter->id,
-                    'action'    => 'deleted',
-                    'user_id'   => Auth::id(),
-                    'remark'    => 'Moved to Trash by admin.',
+                    'meter_id' => $meter->id,
+                    'action' => 'deleted',
+                    'user_id' => Auth::id(),
+                    'remark' => 'Moved to Trash by admin.',
                     'timestamp' => now(),
                 ]);
                 $meter->delete();
@@ -321,10 +325,12 @@ class StockController extends Controller
      */
     public function bulkUnassign(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'meter_ids'   => ['required', 'array', 'min:1'],
+            'meter_ids' => ['required', 'array', 'min:1'],
             'meter_ids.*' => ['exists:meters,id'],
         ]);
 
@@ -337,6 +343,7 @@ class StockController extends Controller
                 // Protect installed meters from accidental unassignment
                 if (in_array($meter->status, ['installed', 'mi_complete'])) {
                     $skippedInstalled++;
+
                     continue;
                 }
 
@@ -348,10 +355,10 @@ class StockController extends Controller
                 $meter->save();
 
                 MeterLog::create([
-                    'meter_id'  => $meter->id,
-                    'action'    => 'unassigned',
-                    'user_id'   => Auth::id(),
-                    'remark'    => "Assignment revoked by admin from {$prevWorkerName}. Returned to stock (was {$oldStatus}).",
+                    'meter_id' => $meter->id,
+                    'action' => 'unassigned',
+                    'user_id' => Auth::id(),
+                    'remark' => "Assignment revoked by admin from {$prevWorkerName}. Returned to stock (was {$oldStatus}).",
                     'timestamp' => now(),
                 ]);
 
@@ -372,16 +379,18 @@ class StockController extends Controller
      */
     public function restore($id)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $meter = Meter::onlyTrashed()->findOrFail($id);
         $meter->restore();
 
         MeterLog::create([
-            'meter_id'  => $meter->id,
-            'action'    => 'restored',
-            'user_id'   => Auth::id(),
-            'remark'    => 'Restored from Trash by admin.',
+            'meter_id' => $meter->id,
+            'action' => 'restored',
+            'user_id' => Auth::id(),
+            'remark' => 'Restored from Trash by admin.',
             'timestamp' => now(),
         ]);
 
@@ -393,10 +402,12 @@ class StockController extends Controller
      */
     public function bulkRestore(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'meter_ids'   => ['required', 'array', 'min:1'],
+            'meter_ids' => ['required', 'array', 'min:1'],
         ]);
 
         $meters = Meter::onlyTrashed()->whereIn('id', $request->meter_ids)->get();
@@ -406,10 +417,10 @@ class StockController extends Controller
             foreach ($meters as $meter) {
                 $meter->restore();
                 MeterLog::create([
-                    'meter_id'  => $meter->id,
-                    'action'    => 'restored',
-                    'user_id'   => Auth::id(),
-                    'remark'    => 'Bulk restored from Trash by admin.',
+                    'meter_id' => $meter->id,
+                    'action' => 'restored',
+                    'user_id' => Auth::id(),
+                    'remark' => 'Bulk restored from Trash by admin.',
                     'timestamp' => now(),
                 ]);
                 $count++;
@@ -424,7 +435,9 @@ class StockController extends Controller
      */
     public function forceDelete($id)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $meter = Meter::withTrashed()->findOrFail($id);
         $meterNumber = $meter->meter_number;
@@ -466,10 +479,12 @@ class StockController extends Controller
      */
     public function bulkForceDelete(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'meter_ids'   => ['required', 'array', 'min:1'],
+            'meter_ids' => ['required', 'array', 'min:1'],
         ]);
 
         $meters = Meter::withTrashed()->whereIn('id', $request->meter_ids)->get();
@@ -515,12 +530,14 @@ class StockController extends Controller
      */
     public function bulkStatusChange(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'meter_ids'   => ['required', 'array', 'min:1'],
+            'meter_ids' => ['required', 'array', 'min:1'],
             'meter_ids.*' => ['exists:meters,id'],
-            'status'      => ['required', 'in:stock,assigned,installed,issue,returned'],
+            'status' => ['required', 'in:stock,assigned,installed,issue,returned'],
         ]);
 
         $meters = Meter::whereIn('id', $request->meter_ids)->get();
@@ -528,7 +545,9 @@ class StockController extends Controller
 
         DB::transaction(function () use ($meters, $request, &$count) {
             foreach ($meters as $meter) {
-                if ($meter->status === $request->status) continue;
+                if ($meter->status === $request->status) {
+                    continue;
+                }
 
                 $oldStatus = $meter->status;
                 $meter->status = $request->status;
@@ -542,10 +561,10 @@ class StockController extends Controller
                 $count++;
 
                 MeterLog::create([
-                    'meter_id'  => $meter->id,
-                    'action'    => 'status_changed',
-                    'user_id'   => Auth::id(),
-                    'remark'    => "Bulk status: {$oldStatus} → {$request->status}",
+                    'meter_id' => $meter->id,
+                    'action' => 'status_changed',
+                    'user_id' => Auth::id(),
+                    'remark' => "Bulk status: {$oldStatus} → {$request->status}",
                     'timestamp' => now(),
                 ]);
             }
@@ -559,12 +578,14 @@ class StockController extends Controller
      */
     public function bulkAssign(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'meter_ids'   => ['required', 'array', 'min:1'],
+            'meter_ids' => ['required', 'array', 'min:1'],
             'meter_ids.*' => ['exists:meters,id'],
-            'worker_id'   => ['required', 'exists:users,id'],
+            'worker_id' => ['required', 'exists:users,id'],
         ]);
 
         $worker = User::findOrFail($request->worker_id);
@@ -590,15 +611,15 @@ class StockController extends Controller
                 ]);
 
                 Assignment::create([
-                    'meter_id'  => $meter->id,
+                    'meter_id' => $meter->id,
                     'worker_id' => $worker->id,
                 ]);
 
                 MeterLog::create([
-                    'meter_id'  => $meter->id,
-                    'action'    => 'assigned',
-                    'user_id'   => Auth::id(),
-                    'remark'    => "Bulk assigned to {$worker->name}",
+                    'meter_id' => $meter->id,
+                    'action' => 'assigned',
+                    'user_id' => Auth::id(),
+                    'remark' => "Bulk assigned to {$worker->name}",
                     'timestamp' => now(),
                 ]);
             }
@@ -612,10 +633,12 @@ class StockController extends Controller
      */
     public function bulkExport(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'meter_ids'   => ['required', 'array', 'min:1'],
+            'meter_ids' => ['required', 'array', 'min:1'],
             'meter_ids.*' => ['exists:meters,id'],
         ]);
 
@@ -623,7 +646,7 @@ class StockController extends Controller
             ->with(['group', 'currentWorker', 'lot', 'installationDetail'])
             ->get();
 
-        $filename = 'meters_export_' . now()->format('Y-m-d_His') . '.csv';
+        $filename = 'meters_export_'.now()->format('Y-m-d_His').'.csv';
 
         $headers = [
             'Content-Type' => 'text/csv',
@@ -660,7 +683,9 @@ class StockController extends Controller
      */
     public function destroy(Meter $meter)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $meterNumber = $meter->meter_number;
 
@@ -668,17 +693,17 @@ class StockController extends Controller
             // Cascade delete all related records
             // 1. Return requests
             \App\Models\ReturnRequest::where('meter_id', $meter->id)->delete();
-            
+
             // 2. Assignment logs
             \App\Models\Assignment::where('meter_id', $meter->id)->delete();
-            
+
             // 3. Activations and activation images
             $activation = \App\Models\MeterActivation::where('meter_id', $meter->id)->first();
             if ($activation) {
                 \App\Models\MeterActivationImage::where('meter_activation_id', $activation->id)->delete();
                 $activation->delete();
             }
-            
+
             // 4. Installation details and installation images
             $installation = \App\Models\InstallationDetail::where('meter_id', $meter->id)->first();
             if ($installation) {
@@ -713,11 +738,11 @@ class StockController extends Controller
     {
         $query = MeterGroup::withCount('meters')
             ->withCount([
-                'meters as stock_count' => fn($q) => $q->where('status', 'stock'),
-                'meters as assigned_count' => fn($q) => $q->where('status', 'assigned'),
-                'meters as installed_count' => fn($q) => $q->where('status', 'installed'),
-                'meters as issue_count' => fn($q) => $q->where('status', 'issue'),
-                'meters as returned_count' => fn($q) => $q->where('status', 'returned'),
+                'meters as stock_count' => fn ($q) => $q->where('status', 'stock'),
+                'meters as assigned_count' => fn ($q) => $q->where('status', 'assigned'),
+                'meters as installed_count' => fn ($q) => $q->where('status', 'installed'),
+                'meters as issue_count' => fn ($q) => $q->where('status', 'issue'),
+                'meters as returned_count' => fn ($q) => $q->where('status', 'returned'),
             ]);
 
         // Filter by type
@@ -727,7 +752,7 @@ class StockController extends Controller
 
         // Search
         if ($search = $request->input('search')) {
-            $query->where('name', 'like', '%' . $search . '%');
+            $query->where('name', 'like', '%'.$search.'%');
         }
 
         $groups = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();

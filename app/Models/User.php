@@ -3,22 +3,20 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Models\Traits\BelongsToCompany;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Casts\Attribute;
-use Illuminate\Support\Facades\Crypt;
-use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Auth;
-use App\Models\MeterActivation;
-use App\Models\Company;
-use App\Models\Traits\BelongsToCompany;
+use Illuminate\Support\Facades\Crypt;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -83,6 +81,7 @@ class User extends Authenticatable
                 }
                 try {
                     Crypt::decryptString($value);
+
                     return $value;
                 } catch (DecryptException $e) {
                     return Crypt::encryptString($value);
@@ -131,7 +130,7 @@ class User extends Authenticatable
         static::creating(function ($user) {
             if (empty($user->company_id) && Auth::hasUser()) {
                 $auth = Auth::user();
-                if ($auth->role !== 'super_admin' && !empty($auth->company_id)) {
+                if ($auth->role !== 'super_admin' && ! empty($auth->company_id)) {
                     $user->company_id = $auth->company_id;
                 }
             }

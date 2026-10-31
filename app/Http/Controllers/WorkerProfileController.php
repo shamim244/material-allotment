@@ -11,26 +11,30 @@ class WorkerProfileController extends Controller
 {
     public function show(User $user)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
-        if ($user->role !== 'worker') abort(404);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
+        if ($user->role !== 'worker') {
+            abort(404);
+        }
 
         // Stats
         $meters = Meter::where('current_worker_id', $user->id);
         $stats = [
-            'total_assigned'  => $user->assignments()->count(),
-            'held'            => (clone $meters)->where('status', 'assigned')->count(),
-            'installed'       => (clone $meters)->whereIn('status', ['installed', 'mi_complete'])->count(),
-            'issues'          => (clone $meters)->where('status', 'issue')->count(),
-            'returned'        => Meter::whereHas('assignments', fn($q) => $q->where('worker_id', $user->id))
-                                    ->where('status', 'returned')->count(),
+            'total_assigned' => $user->assignments()->count(),
+            'held' => (clone $meters)->where('status', 'assigned')->count(),
+            'installed' => (clone $meters)->whereIn('status', ['installed', 'mi_complete'])->count(),
+            'issues' => (clone $meters)->where('status', 'issue')->count(),
+            'returned' => Meter::whereHas('assignments', fn ($q) => $q->where('worker_id', $user->id))
+                ->where('status', 'returned')->count(),
         ];
 
         // MI stats
         $miStats = [
-            'pending'        => MeterActivation::where('worker_id', $user->id)->where('mi_status', 'pending')->count(),
-            'complete'       => MeterActivation::where('worker_id', $user->id)->where('mi_status', 'complete')->count(),
-            'issue'          => MeterActivation::where('worker_id', $user->id)->where('mi_status', 'issue')->count(),
-            'job_not_found'  => MeterActivation::where('worker_id', $user->id)->where('mi_status', 'job_not_found')->count(),
+            'pending' => MeterActivation::where('worker_id', $user->id)->where('mi_status', 'pending')->count(),
+            'complete' => MeterActivation::where('worker_id', $user->id)->where('mi_status', 'complete')->count(),
+            'issue' => MeterActivation::where('worker_id', $user->id)->where('mi_status', 'issue')->count(),
+            'job_not_found' => MeterActivation::where('worker_id', $user->id)->where('mi_status', 'job_not_found')->count(),
         ];
 
         // Currently held meters

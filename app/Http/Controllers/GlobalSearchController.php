@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lot;
 use App\Models\Meter;
 use App\Models\MeterGroup;
-use App\Models\Lot;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,7 +20,7 @@ class GlobalSearchController extends Controller
         }
 
         $results = [];
-        $like = '%' . $q . '%';
+        $like = '%'.$q.'%';
 
         // Meters — search meter_number
         $meters = Meter::where('meter_number', 'like', $like)
@@ -42,8 +42,8 @@ class GlobalSearchController extends Controller
             $workers = User::where('role', 'worker')
                 ->where(function ($query) use ($like) {
                     $query->where('name', 'like', $like)
-                          ->orWhere('email', 'like', $like)
-                          ->orWhere('mobile', 'like', $like);
+                        ->orWhere('email', 'like', $like)
+                        ->orWhere('mobile', 'like', $like);
                 })
                 ->limit(5)
                 ->get();
@@ -69,7 +69,7 @@ class GlobalSearchController extends Controller
                     'type' => 'lot',
                     'icon' => '📦',
                     'label' => $lot->lot_number,
-                    'sublabel' => $lot->meters_count . ' meters',
+                    'sublabel' => $lot->meters_count.' meters',
                     'url' => route('lots.show', $lot),
                 ];
             }
@@ -85,7 +85,7 @@ class GlobalSearchController extends Controller
                     'type' => 'group',
                     'icon' => '📁',
                     'label' => $group->name,
-                    'sublabel' => $group->meters_count . ' meters',
+                    'sublabel' => $group->meters_count.' meters',
                     'url' => route('stock.groups.show', $group),
                 ];
             }

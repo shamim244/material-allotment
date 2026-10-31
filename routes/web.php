@@ -66,6 +66,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Accounting Reports (Contractor)
     Route::get('/accounting', [App\Http\Controllers\AccountingController::class, 'index'])->name('accounting.index');
 
+    // Contractor Billing, Plans, Wallet & Referrals
+    Route::get('/billing', [App\Http\Controllers\BillingController::class, 'index'])->name('billing.index');
+    Route::post('/billing/subscribe', [App\Http\Controllers\BillingController::class, 'subscribe'])->name('billing.subscribe');
+
     // Custom Report (Contractor)
     Route::get('/reports/custom', [App\Http\Controllers\CustomReportController::class, 'index'])->name('reports.custom');
     Route::post('/reports/custom', [App\Http\Controllers\CustomReportController::class, 'generate'])->name('reports.custom.generate');
@@ -130,7 +134,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/admin/users/{user}/edit', [App\Http\Controllers\UserManagementController::class, 'edit'])->name('admin.users.edit');
     Route::put('/admin/users/{user}', [App\Http\Controllers\UserManagementController::class, 'update'])->name('admin.users.update');
     Route::post('/admin/stop-impersonating', [App\Http\Controllers\UserManagementController::class, 'stopImpersonating'])->name('admin.stop-impersonating');
-    
+
     // Admin: Settings / SMTP
     Route::get('/admin/settings', [App\Http\Controllers\SettingController::class, 'index'])->name('admin.settings.index');
     Route::post('/admin/settings', [App\Http\Controllers\SettingController::class, 'update'])->name('admin.settings.update');
@@ -151,6 +155,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/companies/{company}/toggle', [App\Http\Controllers\SuperAdminController::class, 'toggleStatus'])->name('companies.toggle');
         Route::post('/companies/{company}/impersonate', [App\Http\Controllers\SuperAdminController::class, 'impersonate'])->name('companies.impersonate');
         Route::delete('/companies/{company}', [App\Http\Controllers\SuperAdminController::class, 'destroy'])->name('companies.destroy');
+
+        // Custom Deal / Override for companies
+        Route::get('/companies/{company}/override-subscription', [App\Http\Controllers\SuperAdmin\SuperAdminSubscriptionController::class, 'createOverride'])->name('companies.override-subscription');
+        Route::post('/companies/{company}/override-subscription', [App\Http\Controllers\SuperAdmin\SuperAdminSubscriptionController::class, 'storeOverride'])->name('companies.override-subscription.store');
+
+        // Master Subscription Plans Management
+        Route::get('/plans', [App\Http\Controllers\SuperAdmin\PlanManagementController::class, 'index'])->name('plans.index');
+        Route::get('/plans/create', [App\Http\Controllers\SuperAdmin\PlanManagementController::class, 'create'])->name('plans.create');
+        Route::post('/plans', [App\Http\Controllers\SuperAdmin\PlanManagementController::class, 'store'])->name('plans.store');
+        Route::get('/plans/{plan}/edit', [App\Http\Controllers\SuperAdmin\PlanManagementController::class, 'edit'])->name('plans.edit');
+        Route::put('/plans/{plan}', [App\Http\Controllers\SuperAdmin\PlanManagementController::class, 'update'])->name('plans.update');
+        Route::patch('/plans/{plan}/toggle', [App\Http\Controllers\SuperAdmin\PlanManagementController::class, 'toggleStatus'])->name('plans.toggle');
+
+        // Wallets & Credits Management
+        Route::get('/wallets', [App\Http\Controllers\SuperAdmin\SuperAdminWalletController::class, 'index'])->name('wallets.index');
+        Route::post('/wallets/{company}/adjust', [App\Http\Controllers\SuperAdmin\SuperAdminWalletController::class, 'adjust'])->name('wallets.adjust');
+        Route::get('/wallets/{company}/history', [App\Http\Controllers\SuperAdmin\SuperAdminWalletController::class, 'history'])->name('wallets.history');
+
+        // Platform Referrals Ledger
+        Route::get('/referrals', [App\Http\Controllers\SuperAdmin\SuperAdminReferralController::class, 'index'])->name('referrals.index');
     });
 });
 

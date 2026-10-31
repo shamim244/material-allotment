@@ -44,6 +44,23 @@
                     </div>
 
                     <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Unique Referral Code</label>
+                        <input type="text" name="referral_code" value="{{ old('referral_code', $company->referral_code) }}" placeholder="e.g. NCC-REF-ABC123"
+                               class="w-full rounded-xl border-gray-200 text-sm font-mono focus:border-indigo-500 focus:ring-indigo-500 @error('referral_code') border-rose-300 @enderror">
+                        @error('referral_code')<p class="text-xs text-rose-500 mt-1">{{ $message }}</p>@enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Agency Wallet Balance</label>
+                        <div class="flex items-center gap-2 mt-1">
+                            <span class="text-base font-bold text-emerald-600">₹{{ number_format($company->wallet_balance, 2) }}</span>
+                            <a href="{{ route('super-admin.wallets.history', $company) }}" class="text-xs text-indigo-600 hover:underline">
+                                View Passbook &rarr;
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
                         <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">Contact Person Name <span class="text-rose-500">*</span></label>
                         <input type="text" name="contact_person" value="{{ old('contact_person', $company->contact_person) }}" required
                                class="w-full rounded-xl border-gray-200 text-sm focus:border-indigo-500 focus:ring-indigo-500">

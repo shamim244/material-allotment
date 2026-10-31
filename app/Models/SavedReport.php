@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Models\Traits\BelongsToCompany;
+use Illuminate\Database\Eloquent\Model;
 
 class SavedReport extends Model
 {

@@ -15,6 +15,7 @@ class InstallationConfigController extends Controller
         }
 
         $configs = InstallationFieldConfig::orderBy('sort_order')->get();
+
         return view('admin.installation-config', compact('configs'));
     }
 

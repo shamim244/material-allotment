@@ -19,7 +19,7 @@ class ActionRequiredController extends Controller
             ->whereIn('mi_status', ['job_not_found', 'issue', 'pending']);
 
         // Workers only see their own
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $query->where('worker_id', $user->id);
         }
 
@@ -36,22 +36,22 @@ class ActionRequiredController extends Controller
 
         // Search
         if ($search = $request->input('search')) {
-            $query->whereHas('meter', fn($q) => $q->where('meter_number', 'like', "%{$search}%"));
+            $query->whereHas('meter', fn ($q) => $q->where('meter_number', 'like', "%{$search}%"));
         }
 
         // Stats (scoped to user)
         $statsQuery = MeterActivation::whereIn('mi_status', ['job_not_found', 'issue', 'pending']);
-        if (!$isAdmin) {
+        if (! $isAdmin) {
             $statsQuery->where('worker_id', $user->id);
         } elseif ($request->filled('worker_id')) {
             $statsQuery->where('worker_id', $request->worker_id);
         }
 
         $stats = [
-            'total'         => (clone $statsQuery)->count(),
+            'total' => (clone $statsQuery)->count(),
             'job_not_found' => (clone $statsQuery)->where('mi_status', 'job_not_found')->count(),
-            'issue'         => (clone $statsQuery)->where('mi_status', 'issue')->count(),
-            'pending'       => (clone $statsQuery)->where('mi_status', 'pending')->count(),
+            'issue' => (clone $statsQuery)->where('mi_status', 'issue')->count(),
+            'pending' => (clone $statsQuery)->where('mi_status', 'pending')->count(),
         ];
 
         // Order by priority: job_not_found > issue > pending, then oldest first

@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Assignment;
+use App\Models\InstallationDetail;
 use App\Models\Meter;
 use App\Models\MeterActivation;
 use App\Models\MeterGroup;
-use App\Models\Assignment;
-use App\Models\InstallationDetail;
 use App\Models\ReturnRequest;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
@@ -41,11 +41,11 @@ class DashboardController extends Controller
             'total_workers' => User::where('role', 'worker')->count(),
             'pending_returns' => ReturnRequest::where('status', 'pending')->count(),
             'total_groups' => MeterGroup::count(),
-            'mi_pending'       => MeterActivation::where('mi_status', 'pending')->count(),
-            'mi_issue'         => MeterActivation::where('mi_status', 'issue')->count(),
-            'mi_complete'      => MeterActivation::where('mi_status', 'complete')->count(),
+            'mi_pending' => MeterActivation::where('mi_status', 'pending')->count(),
+            'mi_issue' => MeterActivation::where('mi_status', 'issue')->count(),
+            'mi_complete' => MeterActivation::where('mi_status', 'complete')->count(),
             'mi_job_not_found' => MeterActivation::where('mi_status', 'job_not_found')->count(),
-            'nsc_installs'     => InstallationDetail::where('install_type', 'nsc')->count(),
+            'nsc_installs' => InstallationDetail::where('install_type', 'nsc')->count(),
             'replacement_installs' => InstallationDetail::where('install_type', 'replacement')->count(),
         ];
 
@@ -92,10 +92,10 @@ class DashboardController extends Controller
         }
 
         // 2. Lot completion % (top 10 lots by meter count)
-        $lotStats = \App\Models\Lot::withCount(['meters', 'meters as completed_count' => function ($q) {
+        $lotStats = \App\Models\Lot::has('meters')
+            ->withCount(['meters', 'meters as completed_count' => function ($q) {
                 $q->whereIn('status', ['installed', 'mi_complete']);
             }])
-            ->having('meters_count', '>', 0)
             ->orderBy('meters_count', 'desc')
             ->limit(10)
             ->get()
@@ -135,9 +135,9 @@ class DashboardController extends Controller
             'installed' => Meter::where('current_worker_id', $workerId)->where('status', 'installed')->count(),
             'issues' => Meter::where('current_worker_id', $workerId)->where('status', 'issue')->count(),
             'return_pending' => Meter::where('current_worker_id', $workerId)->where('status', 'return_pending')->count(),
-            'mi_pending'       => MeterActivation::where('worker_id', $workerId)->where('mi_status', 'pending')->count(),
-            'mi_issue'         => MeterActivation::where('worker_id', $workerId)->where('mi_status', 'issue')->count(),
-            'mi_complete'      => MeterActivation::where('worker_id', $workerId)->where('mi_status', 'complete')->count(),
+            'mi_pending' => MeterActivation::where('worker_id', $workerId)->where('mi_status', 'pending')->count(),
+            'mi_issue' => MeterActivation::where('worker_id', $workerId)->where('mi_status', 'issue')->count(),
+            'mi_complete' => MeterActivation::where('worker_id', $workerId)->where('mi_status', 'complete')->count(),
             'mi_job_not_found' => MeterActivation::where('worker_id', $workerId)->where('mi_status', 'job_not_found')->count(),
         ];
 

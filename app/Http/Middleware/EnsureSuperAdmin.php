@@ -14,7 +14,7 @@ class EnsureSuperAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || Auth::user()->role !== 'super_admin') {
+        if (! Auth::check() || Auth::user()->role !== 'super_admin') {
             abort(403, 'Unauthorized. Super Admin access required.');
         }
 

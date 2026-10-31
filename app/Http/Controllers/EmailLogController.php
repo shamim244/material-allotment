@@ -16,16 +16,16 @@ class EmailLogController extends Controller
         }
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('to', 'like', '%' . $request->search . '%')
-                  ->orWhere('subject', 'like', '%' . $request->search . '%')
-                  ->orWhere('type', 'like', '%' . $request->search . '%');
+                $q->where('to', 'like', '%'.$request->search.'%')
+                    ->orWhere('subject', 'like', '%'.$request->search.'%')
+                    ->orWhere('type', 'like', '%'.$request->search.'%');
             });
         }
 
-        $logs    = $query->paginate(50)->withQueryString();
-        $total   = EmailLog::count();
-        $sent    = EmailLog::where('status', 'sent')->count();
-        $failed  = EmailLog::where('status', 'failed')->count();
+        $logs = $query->paginate(50)->withQueryString();
+        $total = EmailLog::count();
+        $sent = EmailLog::where('status', 'sent')->count();
+        $failed = EmailLog::where('status', 'failed')->count();
 
         return view('admin.email-logs.index', compact('logs', 'total', 'sent', 'failed'));
     }
@@ -33,6 +33,7 @@ class EmailLogController extends Controller
     public function clear()
     {
         EmailLog::truncate();
+
         return back()->with('success', 'Email log cleared successfully.');
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Assignment;
 use App\Models\Meter;
 use App\Models\MeterGroup;
 use App\Models\User;
@@ -33,14 +32,14 @@ class AssignmentTest extends TestCase
             ]);
 
         $response->assertSessionHasNoErrors();
-        
+
         foreach ($meters as $meter) {
             $this->assertDatabaseHas('meters', [
                 'id' => $meter->id,
                 'status' => 'assigned',
                 'current_worker_id' => $this->worker->id,
             ]);
-            
+
             $this->assertDatabaseHas('assignments', [
                 'meter_id' => $meter->id,
                 'worker_id' => $this->worker->id,

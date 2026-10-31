@@ -134,6 +134,24 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                     <span x-show="sidebarOpen" x-cloak class="truncate">Contractors</span>
                 </a>
+                <a href="{{ route('super-admin.plans.index') }}"
+                   class="sidebar-link {{ request()->routeIs('super-admin.plans.*') ? 'active' : '' }}"
+                   title="Plans & Tiers">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <span x-show="sidebarOpen" x-cloak class="truncate">Plans & Tiers</span>
+                </a>
+                <a href="{{ route('super-admin.wallets.index') }}"
+                   class="sidebar-link {{ request()->routeIs('super-admin.wallets.*') ? 'active' : '' }}"
+                   title="Agency Wallets">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    <span x-show="sidebarOpen" x-cloak class="truncate">Wallets</span>
+                </a>
+                <a href="{{ route('super-admin.referrals.index') }}"
+                   class="sidebar-link {{ request()->routeIs('super-admin.referrals.*') ? 'active' : '' }}"
+                   title="Referrals Ledger">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <span x-show="sidebarOpen" x-cloak class="truncate">Referrals</span>
+                </a>
                 <a href="{{ route('super-admin.companies.create') }}"
                    class="sidebar-link {{ request()->routeIs('super-admin.companies.create') ? 'active' : '' }}"
                    title="Onboard Agency">
@@ -199,6 +217,12 @@
                    title="Accounting">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span x-show="sidebarOpen" x-cloak class="truncate">Accounting</span>
+                </a>
+                <a href="{{ route('billing.index') }}"
+                   class="sidebar-link {{ request()->routeIs('billing.*') ? 'active' : '' }}"
+                   title="Billing & Wallet">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    <span x-show="sidebarOpen" x-cloak class="truncate">Billing & Wallet</span>
                 </a>
                 <a href="{{ route('admin.map.index') }}"
                    class="sidebar-link {{ request()->routeIs('admin.map.*') ? 'active' : '' }}"
@@ -337,6 +361,9 @@
                 <p class="sidebar-group-label">Platform SaaS</p>
                 <a href="{{ route('super-admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('super-admin.dashboard') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> Platform Stats</a>
                 <a href="{{ route('super-admin.companies.index') }}" class="sidebar-link {{ request()->routeIs('super-admin.companies.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg> Contractors</a>
+                <a href="{{ route('super-admin.plans.index') }}" class="sidebar-link {{ request()->routeIs('super-admin.plans.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg> Plans & Tiers</a>
+                <a href="{{ route('super-admin.wallets.index') }}" class="sidebar-link {{ request()->routeIs('super-admin.wallets.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg> Wallets</a>
+                <a href="{{ route('super-admin.referrals.index') }}" class="sidebar-link {{ request()->routeIs('super-admin.referrals.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg> Referrals</a>
                 <a href="{{ route('super-admin.companies.create') }}" class="sidebar-link {{ request()->routeIs('super-admin.companies.create') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Onboard Agency</a>
             @endif
             @if(Auth::user()->role === 'contractor')
@@ -347,10 +374,11 @@
                 <a href="{{ route('assignments.create') }}" class="sidebar-link {{ request()->routeIs('assignments.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg> Assign Meters</a>
                 <a href="{{ route('worker.dashboard') }}" class="sidebar-link {{ request()->routeIs('worker.dashboard') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Manage Meters</a>
                 <a href="{{ route('returns.index') }}" class="sidebar-link {{ request()->routeIs('returns.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg> Returns</a>
-                <p class="sidebar-group-label">Analytics</p>
+                <p class="sidebar-group-label">Analytics & Billing</p>
                 <a href="{{ route('reports.index') }}" class="sidebar-link {{ request()->routeIs('reports.index') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> Reports</a>
                 <a href="{{ route('reports.custom') }}" class="sidebar-link {{ request()->routeIs('reports.custom*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg> Custom Report</a>
                 <a href="{{ route('accounting.index') }}" class="sidebar-link {{ request()->routeIs('accounting.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Accounting</a>
+                <a href="{{ route('billing.index') }}" class="sidebar-link {{ request()->routeIs('billing.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg> Billing & Wallet</a>
                 <a href="{{ route('admin.map.index') }}" class="sidebar-link {{ request()->routeIs('admin.map.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"/></svg> Map</a>
                 <p class="sidebar-group-label">Administration</p>
                 <a href="{{ route('admin.users.index') }}" class="sidebar-link {{ request()->routeIs('admin.users.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg> Users</a>
@@ -488,6 +516,42 @@
                 <button type="submit" class="bg-white text-amber-700 px-2 py-0.5 rounded text-xs font-semibold">Exit</button>
             </form>
         </div>
+        @endif
+
+        <!-- Global Subscription Expiry Warning Banner (Contractor) -->
+        @if(Auth::check() && Auth::user()->role === 'contractor' && Auth::user()->company && !request()->routeIs('billing.*'))
+            @php $subCompany = Auth::user()->company; @endphp
+            @if($subCompany->isSubscriptionExpired())
+                <div class="bg-rose-600 text-white px-4 py-2.5 text-xs flex items-center justify-between shadow-sm z-30">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">⚠️</span>
+                        <span><strong>Subscription Expired:</strong> Your agency plan has expired. Renew your subscription to maintain active quotas and avoid workflow disruptions.</span>
+                    </div>
+                    <a href="{{ route('billing.index') }}" class="underline font-bold text-white hover:text-rose-100 shrink-0 ml-3">
+                        Renew Plan &rarr;
+                    </a>
+                </div>
+            @elseif($subCompany->isSubscriptionExpiringSoon(7))
+                <div class="bg-amber-500 text-white px-4 py-2.5 text-xs flex items-center justify-between shadow-sm z-30">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">⏳</span>
+                        <span><strong>Subscription Notice:</strong> Your agency subscription expires in <strong>{{ $subCompany->daysRemainingOnSubscription() }} {{ Str::plural('day', $subCompany->daysRemainingOnSubscription()) }}</strong>. Renew now to extend your term seamlessly.</span>
+                    </div>
+                    <a href="{{ route('billing.index') }}" class="underline font-bold text-white hover:text-amber-100 shrink-0 ml-3">
+                        Extend Subscription &rarr;
+                    </a>
+                </div>
+            @elseif(!$subCompany->hasActiveSubscription())
+                <div class="bg-indigo-600 text-white px-4 py-2.5 text-xs flex items-center justify-between shadow-sm z-30">
+                    <div class="flex items-center gap-2">
+                        <span class="text-base">🚀</span>
+                        <span><strong>No Active Plan:</strong> Your agency currently has no active subscription. Select a plan to activate platform features and start managing meter allotments.</span>
+                    </div>
+                    <a href="{{ route('billing.index') }}" class="underline font-bold text-white hover:text-indigo-100 shrink-0 ml-3">
+                        Choose Plan &rarr;
+                    </a>
+                </div>
+            @endif
         @endif
 
         <!-- Scrollable page content -->

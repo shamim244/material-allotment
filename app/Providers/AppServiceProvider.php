@@ -2,12 +2,12 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Event;
-use App\Models\Setting;
 use App\Listeners\LogSentEmail;
+use App\Models\Setting;
 use Illuminate\Mail\Events\MessageSent;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(MessageSent::class, LogSentEmail::class);
 
         try {
-            if (!Schema::hasTable('settings')) {
+            if (! Schema::hasTable('settings')) {
                 return;
             }
 
@@ -43,31 +43,31 @@ class AppServiceProvider extends ServiceProvider
 
             // SSL → smtps scheme mapping required by Symfony Mailer
             $encryption = $settings['mail_encryption'] ?? null;
-            $scheme      = ($encryption === 'ssl') ? 'smtps' : (($encryption === 'tls') ? 'smtp' : null);
+            $scheme = ($encryption === 'ssl') ? 'smtps' : (($encryption === 'tls') ? 'smtp' : null);
 
             config([
                 // Active driver
                 'mail.default' => $driver,
 
                 // SMTP connection overrides
-                'mail.mailers.smtp.host'       => $settings['mail_host']       ?? config('mail.mailers.smtp.host'),
-                'mail.mailers.smtp.port'       => $settings['mail_port']       ?? config('mail.mailers.smtp.port'),
+                'mail.mailers.smtp.host' => $settings['mail_host'] ?? config('mail.mailers.smtp.host'),
+                'mail.mailers.smtp.port' => $settings['mail_port'] ?? config('mail.mailers.smtp.port'),
                 'mail.mailers.smtp.encryption' => $encryption,
-                'mail.mailers.smtp.scheme'     => $scheme,
-                'mail.mailers.smtp.username'   => $settings['mail_username']   ?? config('mail.mailers.smtp.username'),
-                'mail.mailers.smtp.password'   => $settings['mail_password']   ?? config('mail.mailers.smtp.password'),
+                'mail.mailers.smtp.scheme' => $scheme,
+                'mail.mailers.smtp.username' => $settings['mail_username'] ?? config('mail.mailers.smtp.username'),
+                'mail.mailers.smtp.password' => $settings['mail_password'] ?? config('mail.mailers.smtp.password'),
 
                 // Third-party API overrides
-                'services.mailgun.domain'  => $settings['mailgun_domain']  ?? config('services.mailgun.domain'),
-                'services.mailgun.secret'  => $settings['mailgun_secret']  ?? config('services.mailgun.secret'),
-                'services.postmark.token'  => $settings['postmark_token']  ?? config('services.postmark.token'),
-                'services.ses.key'         => $settings['ses_key']         ?? config('services.ses.key'),
-                'services.ses.secret'      => $settings['ses_secret']      ?? config('services.ses.secret'),
-                'services.ses.region'      => $settings['ses_region']      ?? config('services.ses.region'),
+                'services.mailgun.domain' => $settings['mailgun_domain'] ?? config('services.mailgun.domain'),
+                'services.mailgun.secret' => $settings['mailgun_secret'] ?? config('services.mailgun.secret'),
+                'services.postmark.token' => $settings['postmark_token'] ?? config('services.postmark.token'),
+                'services.ses.key' => $settings['ses_key'] ?? config('services.ses.key'),
+                'services.ses.secret' => $settings['ses_secret'] ?? config('services.ses.secret'),
+                'services.ses.region' => $settings['ses_region'] ?? config('services.ses.region'),
 
                 // Global sender identity
                 'mail.from.address' => $settings['mail_from_address'] ?? config('mail.from.address'),
-                'mail.from.name'    => $settings['mail_from_name']    ?? config('mail.from.name'),
+                'mail.from.name' => $settings['mail_from_name'] ?? config('mail.from.name'),
             ]);
 
             // Purge ALL cached mailer instances so the next Mail::send() / notification
@@ -77,7 +77,10 @@ class AppServiceProvider extends ServiceProvider
                 $manager = $this->app->make('mail.manager');
                 // Purge each known mailer name to clear internal caches
                 foreach (['smtp', 'smtps', 'mailgun', 'postmark', 'ses', 'log', $driver] as $mailerName) {
-                    try { $manager->purge($mailerName); } catch (\Throwable) {}
+                    try {
+                        $manager->purge($mailerName);
+                    } catch (\Throwable) {
+                    }
                 }
             }
 

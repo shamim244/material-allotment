@@ -4,7 +4,6 @@ namespace App\Listeners;
 
 use App\Models\EmailLog;
 use Illuminate\Mail\Events\MessageSent;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 class LogSentEmail
 {
@@ -29,12 +28,12 @@ class LogSentEmail
             }
 
             EmailLog::create([
-                'to'      => $to ?: '—',
+                'to' => $to ?: '—',
                 'subject' => $message->getSubject(),
-                'from'    => $from,
-                'mailer'  => config('mail.default'),
-                'type'    => $type,
-                'status'  => 'sent',
+                'from' => $from,
+                'mailer' => config('mail.default'),
+                'type' => $type,
+                'status' => 'sent',
             ]);
         } catch (\Throwable $e) {
             // Never let logging crash the application

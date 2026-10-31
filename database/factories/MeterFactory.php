@@ -17,7 +17,7 @@ class MeterFactory extends Factory
     public function definition(): array
     {
         return [
-            'meter_number' => 'C' . $this->faker->unique()->numberBetween(1000000, 9999999),
+            'meter_number' => 'C'.$this->faker->unique()->numberBetween(1000000, 9999999),
             'status' => 'stock',
         ];
     }

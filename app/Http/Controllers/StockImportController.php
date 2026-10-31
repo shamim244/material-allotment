@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Lot;
 use App\Models\Meter;
 use App\Models\MeterGroup;
-use App\Models\Lot;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class StockImportController extends Controller
 {
     public function index()
     {
         $lots = Lot::orderBy('id', 'desc')->get();
+
         return view('stock.import', compact('lots'));
     }
 
@@ -23,7 +23,7 @@ class StockImportController extends Controller
     private function generateBoxMeters(string $startMeter): ?array
     {
         preg_match('/(\d+)$/', $startMeter, $matches);
-        if (!isset($matches[1])) {
+        if (! isset($matches[1])) {
             return null;
         }
 
@@ -31,14 +31,14 @@ class StockImportController extends Controller
         $prefix = substr($startMeter, 0, -strlen($numberPart));
         $lastDigit = intval(substr($numberPart, -1));
 
-        if (!in_array($lastDigit, [1, 6])) {
+        if (! in_array($lastDigit, [1, 6])) {
             return null;
         }
 
         $meters = [];
         for ($i = 0; $i < 5; $i++) {
             $currentNum = intval($numberPart) + $i;
-            $meters[] = $prefix . str_pad($currentNum, strlen($numberPart), '0', STR_PAD_LEFT);
+            $meters[] = $prefix.str_pad($currentNum, strlen($numberPart), '0', STR_PAD_LEFT);
         }
 
         return $meters;
@@ -113,11 +113,11 @@ class StockImportController extends Controller
             $lotId = $request->lot_id;
 
             // Find or create the box group
-            $boxName = 'Box ' . $boxMeters[0] . '-' . end($boxMeters);
+            $boxName = 'Box '.$boxMeters[0].'-'.end($boxMeters);
             $group = MeterGroup::firstOrCreate(
                 ['name' => $boxName, 'type' => 'box'],
             );
-            if ($lotId && !$group->lot_id) {
+            if ($lotId && ! $group->lot_id) {
                 $group->update(['lot_id' => $lotId]);
             }
 
@@ -131,7 +131,7 @@ class StockImportController extends Controller
             }
         });
 
-        return back()->with('success', count($toImport) . ' meter(s) imported into box successfully.');
+        return back()->with('success', count($toImport).' meter(s) imported into box successfully.');
     }
 
     public function storeNormal(Request $request)
@@ -146,12 +146,12 @@ class StockImportController extends Controller
         $meterNumbers = array_filter($meterNumbers);
 
         if (empty($meterNumbers)) {
-             return back()->withErrors(['meter_numbers' => 'No valid meter numbers found.']);
+            return back()->withErrors(['meter_numbers' => 'No valid meter numbers found.']);
         }
 
         $existing = Meter::whereIn('meter_number', $meterNumbers)->pluck('meter_number')->toArray();
-        if (!empty($existing)) {
-             return back()->withErrors(['meter_numbers' => 'Meters already exist: ' . implode(', ', $existing)]);
+        if (! empty($existing)) {
+            return back()->withErrors(['meter_numbers' => 'Meters already exist: '.implode(', ', $existing)]);
         }
 
         DB::transaction(function () use ($meterNumbers, $request) {
@@ -165,7 +165,7 @@ class StockImportController extends Controller
             }
         });
 
-        return back()->with('success', count($meterNumbers) . ' meters imported successfully.');
+        return back()->with('success', count($meterNumbers).' meters imported successfully.');
     }
 
     public function storeLarge(Request $request)
@@ -182,8 +182,8 @@ class StockImportController extends Controller
         preg_match('/^([A-Z]*)(\d+)$/', $start, $startMatches);
         preg_match('/^([A-Z]*)(\d+)$/', $end, $endMatches);
 
-        if (!$startMatches || !$endMatches || $startMatches[1] !== $endMatches[1]) {
-             return back()->withErrors(['start_meter' => 'Start and End meters must have the same prefix and valid numeric format.']);
+        if (! $startMatches || ! $endMatches || $startMatches[1] !== $endMatches[1]) {
+            return back()->withErrors(['start_meter' => 'Start and End meters must have the same prefix and valid numeric format.']);
         }
 
         $prefix = $startMatches[1];
@@ -192,25 +192,25 @@ class StockImportController extends Controller
         $length = strlen($startMatches[2]);
 
         if ($startNum > $endNum) {
-             return back()->withErrors(['start_meter' => 'Start meter must be less than End meter.']);
+            return back()->withErrors(['start_meter' => 'Start meter must be less than End meter.']);
         }
 
         $total = $endNum - $startNum + 1;
         if ($total > 1000) {
-             return back()->withErrors(['start_meter' => 'Range too large (max 1000).']);
+            return back()->withErrors(['start_meter' => 'Range too large (max 1000).']);
         }
 
         // Generate all meter numbers in range
         $allMeters = [];
         for ($i = 0; $i < $total; $i++) {
-            $allMeters[] = $prefix . str_pad($startNum + $i, $length, '0', STR_PAD_LEFT);
+            $allMeters[] = $prefix.str_pad($startNum + $i, $length, '0', STR_PAD_LEFT);
         }
 
         if (Meter::whereIn('meter_number', $allMeters)->exists()) {
-             return back()->withErrors(['start_meter' => 'Some meters in this range already exist.']);
+            return back()->withErrors(['start_meter' => 'Some meters in this range already exist.']);
         }
 
-        DB::transaction(function () use ($allMeters, $startNum, $endNum, $prefix, $length, $request) {
+        DB::transaction(function () use ($allMeters, $startNum, $prefix, $length, $request) {
             $lotId = $request->lot_id;
 
             // Group ALL meters into their correct box based on 1/6 rule.
@@ -241,11 +241,11 @@ class StockImportController extends Controller
             // Step 2: Create a group for each box and import meters
             foreach ($boxes as $boxStartNum => $metersInBox) {
                 $boxEndNum = $boxStartNum + 4;
-                $boxStartStr = $prefix . str_pad($boxStartNum, $length, '0', STR_PAD_LEFT);
-                $boxEndStr = $prefix . str_pad($boxEndNum, $length, '0', STR_PAD_LEFT);
+                $boxStartStr = $prefix.str_pad($boxStartNum, $length, '0', STR_PAD_LEFT);
+                $boxEndStr = $prefix.str_pad($boxEndNum, $length, '0', STR_PAD_LEFT);
 
                 $group = MeterGroup::create([
-                    'name' => 'Large Batch ' . $boxStartStr . '-' . $boxEndStr,
+                    'name' => 'Large Batch '.$boxStartStr.'-'.$boxEndStr,
                     'type' => 'large',
                     'lot_id' => $lotId,
                 ]);
@@ -261,6 +261,6 @@ class StockImportController extends Controller
             }
         });
 
-        return back()->with('success', count($allMeters) . ' meters imported into box groups.');
+        return back()->with('success', count($allMeters).' meters imported into box groups.');
     }
 }

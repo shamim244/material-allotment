@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -37,15 +36,15 @@ class SettingTest extends TestCase
         ]);
 
         $response->assertSessionHas('success', 'Email Connections updated successfully.');
-        
+
         $this->assertDatabaseHas('settings', [
             'key' => 'mail_host',
-            'value' => 'custom.smtp.host'
+            'value' => 'custom.smtp.host',
         ]);
-        
+
         $this->assertDatabaseHas('settings', [
             'key' => 'mail_from_address',
-            'value' => 'system@test.com'
+            'value' => 'system@test.com',
         ]);
     }
 }

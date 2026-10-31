@@ -23,7 +23,7 @@ class UserManagementController extends Controller
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -95,7 +95,7 @@ class UserManagementController extends Controller
                 \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\WelcomeUserMail($user, $request->password));
             }
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Failed to send welcome email: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Failed to send welcome email: '.$e->getMessage());
         }
 
         return redirect()->route('admin.users.index')
@@ -119,7 +119,7 @@ class UserManagementController extends Controller
 
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:users,email,'.$user->id],
             'mobile' => ['nullable', 'string', 'max:20'],
             'password' => ['nullable', 'confirmed', Rules\Password::defaults()],
             'role' => ['required', 'in:contractor,worker'],
@@ -154,9 +154,10 @@ class UserManagementController extends Controller
             return back()->with('error', 'You cannot deactivate your own account.');
         }
 
-        $user->update(['is_active' => !$user->is_active]);
+        $user->update(['is_active' => ! $user->is_active]);
 
         $status = $user->is_active ? 'activated' : 'deactivated';
+
         return back()->with('success', "User '{$user->name}' has been {$status}.");
     }
 
@@ -185,7 +186,7 @@ class UserManagementController extends Controller
     {
         $adminId = session()->get('impersonator_id');
 
-        if (!$adminId) {
+        if (! $adminId) {
             return redirect()->route('dashboard');
         }
 

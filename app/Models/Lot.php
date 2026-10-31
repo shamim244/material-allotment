@@ -2,14 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\Traits\BelongsToCompany;
 
 class Lot extends Model
 {
-    use HasFactory, SoftDeletes, BelongsToCompany;
+    use BelongsToCompany, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'company_id',
@@ -34,7 +34,7 @@ class Lot extends Model
             if (empty($lot->lot_number)) {
                 $lastLot = static::orderBy('id', 'desc')->first();
                 $nextNum = $lastLot ? ((int) str_replace('LOT-', '', $lastLot->lot_number)) + 1 : 1;
-                $lot->lot_number = 'LOT-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+                $lot->lot_number = 'LOT-'.str_pad($nextNum, 3, '0', STR_PAD_LEFT);
             }
         });
     }

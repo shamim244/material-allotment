@@ -36,7 +36,7 @@ class MIController extends Controller
         // Search by meter number
         if ($request->filled('search')) {
             $query->whereHas('meter', function ($q) use ($request) {
-                $q->where('meter_number', 'like', '%' . $request->search . '%');
+                $q->where('meter_number', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -61,9 +61,9 @@ class MIController extends Controller
 
         $stats = [
             'total' => (clone $statsQuery)->count(),
-            'pending'       => (clone $statsQuery)->where('mi_status', 'pending')->count(),
-            'issue'         => (clone $statsQuery)->where('mi_status', 'issue')->count(),
-            'complete'      => (clone $statsQuery)->where('mi_status', 'complete')->count(),
+            'pending' => (clone $statsQuery)->where('mi_status', 'pending')->count(),
+            'issue' => (clone $statsQuery)->where('mi_status', 'issue')->count(),
+            'complete' => (clone $statsQuery)->where('mi_status', 'complete')->count(),
             'job_not_found' => (clone $statsQuery)->where('mi_status', 'job_not_found')->count(),
         ];
 
@@ -140,11 +140,11 @@ class MIController extends Controller
             'meter_id' => $activation->meter_id,
             'action' => 'mi_status_change',
             'user_id' => $user->id,
-            'remark' => "MI status changed from {$oldMiStatus} to {$request->mi_status}." . ($request->remark ? " Remark: {$request->remark}" : ''),
+            'remark' => "MI status changed from {$oldMiStatus} to {$request->mi_status}.".($request->remark ? " Remark: {$request->remark}" : ''),
             'timestamp' => now(),
         ]);
 
-        return back()->with('success', "MI status updated to " . ucfirst($request->mi_status) . ".");
+        return back()->with('success', 'MI status updated to '.ucfirst($request->mi_status).'.');
     }
 
     public function uploadImages(Request $request, MeterActivation $activation)
@@ -162,7 +162,7 @@ class MIController extends Controller
 
         foreach ($request->file('images') as $image) {
             $path = $image->store('mi-images', 'public');
-            
+
             MeterActivationImage::create([
                 'meter_activation_id' => $activation->id,
                 'image_path' => $path,
@@ -226,7 +226,9 @@ class MIController extends Controller
     public function bulkUpdateStatus(Request $request)
     {
         $user = Auth::user();
-        if ($user->role !== 'contractor') abort(403);
+        if ($user->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
             'activation_ids' => ['required', 'array', 'min:1'],
@@ -239,7 +241,9 @@ class MIController extends Controller
 
         foreach ($activations as $activation) {
             $oldStatus = $activation->mi_status;
-            if ($oldStatus === $request->mi_status) continue;
+            if ($oldStatus === $request->mi_status) {
+                continue;
+            }
 
             $activation->update([
                 'mi_status' => $request->mi_status,
@@ -265,6 +269,6 @@ class MIController extends Controller
             $count++;
         }
 
-        return back()->with('success', "{$count} MI record(s) updated to " . ucfirst(str_replace('_', ' ', $request->mi_status)) . ".");
+        return back()->with('success', "{$count} MI record(s) updated to ".ucfirst(str_replace('_', ' ', $request->mi_status)).'.');
     }
 }

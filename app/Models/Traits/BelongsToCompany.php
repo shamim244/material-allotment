@@ -19,8 +19,8 @@ trait BelongsToCompany
             if (Auth::hasUser()) {
                 $user = Auth::user();
                 // Contractors and workers only see records for their company
-                if ($user->role !== 'super_admin' && !empty($user->company_id)) {
-                    $builder->where($builder->getModel()->getTable() . '.company_id', $user->company_id);
+                if ($user->role !== 'super_admin' && ! empty($user->company_id)) {
+                    $builder->where($builder->getModel()->getTable().'.company_id', $user->company_id);
                 }
             }
         });
@@ -29,7 +29,7 @@ trait BelongsToCompany
         static::creating(function ($model) {
             if (empty($model->company_id) && Auth::hasUser()) {
                 $user = Auth::user();
-                if ($user->role !== 'super_admin' && !empty($user->company_id)) {
+                if ($user->role !== 'super_admin' && ! empty($user->company_id)) {
                     $model->company_id = $user->company_id;
                 }
             }

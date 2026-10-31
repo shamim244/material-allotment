@@ -1,11 +1,11 @@
 <?php
 
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Crypt;
-use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -22,7 +22,7 @@ return new class extends Migration
         // 2. Encrypt any existing plaintext passwords
         $users = DB::table('users')->whereNotNull('plain_password')->get();
         foreach ($users as $user) {
-            if (!empty($user->plain_password)) {
+            if (! empty($user->plain_password)) {
                 try {
                     // Check if already encrypted
                     Crypt::decryptString($user->plain_password);
@@ -86,7 +86,7 @@ return new class extends Migration
         // Decrypt passwords if reverting
         $users = DB::table('users')->whereNotNull('plain_password')->get();
         foreach ($users as $user) {
-            if (!empty($user->plain_password)) {
+            if (! empty($user->plain_password)) {
                 try {
                     $decrypted = Crypt::decryptString($user->plain_password);
                     DB::table('users')

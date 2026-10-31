@@ -46,9 +46,9 @@ class MiIssueTypeController extends Controller
             abort(403);
         }
 
-        $type->update(['is_active' => !$type->is_active]);
+        $type->update(['is_active' => ! $type->is_active]);
 
-        return back()->with('success', "\"{$type->name}\" " . ($type->is_active ? 'activated' : 'deactivated') . ".");
+        return back()->with('success', "\"{$type->name}\" ".($type->is_active ? 'activated' : 'deactivated').'.');
     }
 
     public function updateOrder(Request $request)
@@ -77,7 +77,7 @@ class MiIssueTypeController extends Controller
 
         // Check if used
         if ($type->activations()->exists()) {
-            return back()->with('error', "Cannot delete \"{$type->name}\" — it's used by " . $type->activations()->count() . " MI record(s). Deactivate it instead.");
+            return back()->with('error', "Cannot delete \"{$type->name}\" — it's used by ".$type->activations()->count().' MI record(s). Deactivate it instead.');
         }
 
         $name = $type->name;

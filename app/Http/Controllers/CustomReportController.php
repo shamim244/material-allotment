@@ -2,12 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Meter;
-use App\Models\MeterGroup;
-use App\Models\MeterLog;
 use App\Models\Lot;
-use App\Models\User;
+use App\Models\Meter;
+use App\Models\MeterLog;
 use App\Models\SavedReport;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +19,9 @@ class CustomReportController extends Controller
      */
     public function index(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $savedReports = SavedReport::where('user_id', Auth::id())
             ->orderBy('updated_at', 'desc')
@@ -39,7 +40,7 @@ class CustomReportController extends Controller
 
         return view('custom-report.index', array_merge($this->emptyState(), [
             'savedReports' => $savedReports,
-            'input'        => $input,
+            'input' => $input,
             'loadedTemplate' => $request->template ?? null,
         ]));
     }
@@ -49,7 +50,9 @@ class CustomReportController extends Controller
      */
     public function generate(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
             'meters' => 'required|string',
@@ -70,8 +73,8 @@ class CustomReportController extends Controller
         return view('custom-report.index', array_merge(
             $this->buildViewData($meters, $missing, $request->meters),
             [
-                'generated'      => true,
-                'savedReports'   => $savedReports,
+                'generated' => true,
+                'savedReports' => $savedReports,
                 'loadedTemplate' => null,
             ]
         ));
@@ -82,16 +85,18 @@ class CustomReportController extends Controller
      */
     public function saveTemplate(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'name'   => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'meters' => 'required|string',
         ]);
 
         SavedReport::create([
-            'user_id'       => Auth::id(),
-            'name'          => $request->name,
+            'user_id' => Auth::id(),
+            'name' => $request->name,
             'meter_numbers' => $request->meters,
         ]);
 
@@ -103,8 +108,12 @@ class CustomReportController extends Controller
      */
     public function updateTemplate(Request $request, SavedReport $savedReport)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
-        if ($savedReport->user_id !== Auth::id()) abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
+        if ($savedReport->user_id !== Auth::id()) {
+            abort(403);
+        }
 
         $request->validate([
             'meters' => 'required|string',
@@ -122,8 +131,12 @@ class CustomReportController extends Controller
      */
     public function deleteTemplate(SavedReport $savedReport)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
-        if ($savedReport->user_id !== Auth::id()) abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
+        if ($savedReport->user_id !== Auth::id()) {
+            abort(403);
+        }
 
         $name = $savedReport->name;
         $savedReport->delete();
@@ -136,16 +149,18 @@ class CustomReportController extends Controller
      */
     public function export(Request $request): StreamedResponse
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $parsed = $this->parseInput($request->meters);
         [$meters, $missing] = $this->lookupMeters($parsed);
 
-        return $this->streamCsv('custom_report_' . now()->format('Y-m-d') . '.csv', [
+        return $this->streamCsv('custom_report_'.now()->format('Y-m-d').'.csv', [
             'Meter Number', 'Type', 'Group', 'Lot', 'Worker', 'Status', 'MI Status',
             'Request #', 'CA #', 'Old Meter #', 'Mobile', 'Latitude', 'Longitude',
             'Created At', 'Updated At',
-        ], $meters->map(fn($m) => [
+        ], $meters->map(fn ($m) => [
             $m->meter_number,
             strtoupper($m->installationDetail?->install_type ?? ''),
             $m->group?->name ?? '',
@@ -169,11 +184,13 @@ class CustomReportController extends Controller
      */
     public function importMissing(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
             'missing_meters' => 'required|string',
-            'lot_id'         => 'nullable|exists:lots,id',
+            'lot_id' => 'nullable|exists:lots,id',
         ]);
 
         $numbers = $this->parseInput($request->missing_meters);
@@ -185,20 +202,21 @@ class CustomReportController extends Controller
             foreach ($numbers as $num) {
                 if (Meter::where('meter_number', $num)->exists()) {
                     $skipped++;
+
                     continue;
                 }
 
                 $meter = Meter::create([
                     'meter_number' => $num,
-                    'status'       => 'stock',
-                    'lot_id'       => $request->lot_id ?: null,
+                    'status' => 'stock',
+                    'lot_id' => $request->lot_id ?: null,
                 ]);
 
                 MeterLog::create([
-                    'meter_id'  => $meter->id,
-                    'action'    => 'imported',
-                    'user_id'   => Auth::id(),
-                    'remark'    => 'Imported from Custom Report (missing meter).',
+                    'meter_id' => $meter->id,
+                    'action' => 'imported',
+                    'user_id' => Auth::id(),
+                    'remark' => 'Imported from Custom Report (missing meter).',
                     'timestamp' => now(),
                 ]);
 
@@ -207,7 +225,8 @@ class CustomReportController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Import failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Import failed: '.$e->getMessage());
         }
 
         $msg = "✅ {$imported} meter(s) imported as stock.";
@@ -223,14 +242,16 @@ class CustomReportController extends Controller
      */
     public function bulkAction(Request $request)
     {
-        if (Auth::user()->role !== 'contractor') abort(403);
+        if (Auth::user()->role !== 'contractor') {
+            abort(403);
+        }
 
         $request->validate([
-            'meter_ids'   => 'required|array|min:1',
+            'meter_ids' => 'required|array|min:1',
             'meter_ids.*' => 'exists:meters,id',
-            'action'      => 'required|in:status,lot',
-            'status'      => 'required_if:action,status|nullable|in:stock,assigned,installed,issue,returned',
-            'lot_id'      => 'required_if:action,lot|nullable|exists:lots,id',
+            'action' => 'required|in:status,lot',
+            'status' => 'required_if:action,status|nullable|in:stock,assigned,installed,issue,returned',
+            'lot_id' => 'required_if:action,lot|nullable|exists:lots,id',
         ]);
 
         $meters = Meter::whereIn('id', $request->meter_ids)->get();
@@ -243,19 +264,19 @@ class CustomReportController extends Controller
                     $old = $meter->status;
                     $meter->update(['status' => $request->status]);
                     MeterLog::create([
-                        'meter_id'  => $meter->id,
-                        'action'    => 'status_change',
-                        'user_id'   => Auth::id(),
-                        'remark'    => "Custom Report: status changed from {$old} to {$request->status}.",
+                        'meter_id' => $meter->id,
+                        'action' => 'status_change',
+                        'user_id' => Auth::id(),
+                        'remark' => "Custom Report: status changed from {$old} to {$request->status}.",
                         'timestamp' => now(),
                     ]);
                 } elseif ($request->action === 'lot') {
                     $meter->update(['lot_id' => $request->lot_id]);
                     MeterLog::create([
-                        'meter_id'  => $meter->id,
-                        'action'    => 'lot_change',
-                        'user_id'   => Auth::id(),
-                        'remark'    => "Custom Report: assigned to lot.",
+                        'meter_id' => $meter->id,
+                        'action' => 'lot_change',
+                        'user_id' => Auth::id(),
+                        'remark' => 'Custom Report: assigned to lot.',
                         'timestamp' => now(),
                     ]);
                 }
@@ -263,11 +284,12 @@ class CustomReportController extends Controller
             DB::commit();
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Bulk action failed: ' . $e->getMessage());
+
+            return back()->with('error', 'Bulk action failed: '.$e->getMessage());
         }
 
         $label = $request->action === 'status'
-            ? "Status changed to " . ucfirst($request->status) . " for {$count} meter(s)."
+            ? 'Status changed to '.ucfirst($request->status)." for {$count} meter(s)."
             : "Lot assigned for {$count} meter(s).";
 
         return back()->with('success', "✅ {$label}");
@@ -278,13 +300,13 @@ class CustomReportController extends Controller
     private function emptyState(): array
     {
         return [
-            'meters'    => collect(),
-            'missing'   => [],
-            'input'     => '',
+            'meters' => collect(),
+            'missing' => [],
+            'input' => '',
             'generated' => false,
-            'stats'     => [],
-            'workers'   => collect(),
-            'lots'      => collect(),
+            'stats' => [],
+            'workers' => collect(),
+            'lots' => collect(),
         ];
     }
 
@@ -297,29 +319,30 @@ class CustomReportController extends Controller
             $stats[$s] = $statusCounts->get($s, 0);
         }
 
-        $stats['nsc'] = $meters->filter(fn($m) => $m->installationDetail?->install_type === 'nsc')->count();
-        $stats['replacement'] = $meters->filter(fn($m) => $m->installationDetail?->install_type === 'replacement')->count();
+        $stats['nsc'] = $meters->filter(fn ($m) => $m->installationDetail?->install_type === 'nsc')->count();
+        $stats['replacement'] = $meters->filter(fn ($m) => $m->installationDetail?->install_type === 'replacement')->count();
 
-        $miCounts = $meters->filter(fn($m) => $m->activation)->groupBy(fn($m) => $m->activation->mi_status)->map->count();
-        $stats['mi_pending']       = $miCounts->get('pending', 0);
-        $stats['mi_complete_act']  = $miCounts->get('complete', 0);
-        $stats['mi_issue_act']     = $miCounts->get('issue', 0);
-        $stats['mi_jnf']           = $miCounts->get('job_not_found', 0);
+        $miCounts = $meters->filter(fn ($m) => $m->activation)->groupBy(fn ($m) => $m->activation->mi_status)->map->count();
+        $stats['mi_pending'] = $miCounts->get('pending', 0);
+        $stats['mi_complete_act'] = $miCounts->get('complete', 0);
+        $stats['mi_issue_act'] = $miCounts->get('issue', 0);
+        $stats['mi_jnf'] = $miCounts->get('job_not_found', 0);
 
         return [
-            'meters'  => $meters,
+            'meters' => $meters,
             'missing' => $missing,
-            'input'   => $input,
-            'stats'   => $stats,
+            'input' => $input,
+            'stats' => $stats,
             'workers' => User::where('role', 'worker')->where('is_active', true)->orderBy('name')->get(),
-            'lots'    => Lot::orderBy('id', 'desc')->get(),
+            'lots' => Lot::orderBy('id', 'desc')->get(),
         ];
     }
 
     private function parseInput(string $input): array
     {
         $numbers = preg_split('/[\s,;\|]+/', trim($input));
-        $numbers = array_filter(array_map('trim', $numbers), fn($n) => $n !== '');
+        $numbers = array_filter(array_map('trim', $numbers), fn ($n) => $n !== '');
+
         return array_values(array_unique($numbers));
     }
 
@@ -339,7 +362,7 @@ class CustomReportController extends Controller
     {
         return response()->streamDownload(function () use ($headers, $rows) {
             $handle = fopen('php://output', 'w');
-            fprintf($handle, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
             fputcsv($handle, $headers);
             foreach ($rows as $row) {
                 fputcsv($handle, $row);

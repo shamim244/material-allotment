@@ -12,17 +12,18 @@ class LogFailedEmail
      * Laravel fires a separate MessageSent on success; failures surface as exceptions
      * in the controller/queue — we log them from there via this helper.
      */
-    public static function record(string $to, string $subject, string $type = null, string $error = null): void
+    public static function record(string $to, string $subject, ?string $type = null, ?string $error = null): void
     {
         try {
             EmailLog::create([
-                'to'      => $to,
+                'to' => $to,
                 'subject' => $subject,
-                'type'    => $type,
-                'status'  => 'failed',
-                'mailer'  => config('mail.default'),
-                'error'   => $error,
+                'type' => $type,
+                'status' => 'failed',
+                'mailer' => config('mail.default'),
+                'error' => $error,
             ]);
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+        }
     }
 }

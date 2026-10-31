@@ -65,6 +65,9 @@
                                 <a href="{{ route('accounting.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm {{ request()->routeIs('accounting.*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50' }} transition">
                                     <span class="text-base">💰</span> Accounting
                                 </a>
+                                <a href="{{ route('billing.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm {{ request()->routeIs('billing.*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50' }} transition">
+                                    <span class="text-base">💳</span> Billing & Wallet
+                                </a>
                                 <a href="{{ route('admin.map.index') }}" class="flex items-center gap-2.5 px-4 py-2.5 text-sm {{ request()->routeIs('admin.map.*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-700 hover:bg-gray-50' }} transition">
                                     <span class="text-base">🗺️</span> Installation Map
                                 </a>
@@ -245,6 +248,9 @@
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('accounting.index')" :active="request()->routeIs('accounting.index')">
                     💰 {{ __('Accounting') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('billing.index')" :active="request()->routeIs('billing.index')">
+                    💳 {{ __('Billing & Wallet') }}
                 </x-responsive-nav-link>
                 <x-responsive-nav-link :href="route('admin.map.index')" :active="request()->routeIs('admin.map.*')">
                     🗺️ {{ __('Installation Map') }}

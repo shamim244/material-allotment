@@ -26,15 +26,15 @@ class ReturnRequestController extends Controller
         // Search by meter number or worker name
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
-                $q->whereHas('meter', fn($m) => $m->where('meter_number', 'like', "%{$search}%"))
-                  ->orWhereHas('worker', fn($w) => $w->where('name', 'like', "%{$search}%"));
+                $q->whereHas('meter', fn ($m) => $m->where('meter_number', 'like', "%{$search}%"))
+                    ->orWhereHas('worker', fn ($w) => $w->where('name', 'like', "%{$search}%"));
             });
         }
 
         // Stats
         $stats = [
-            'total'    => ReturnRequest::count(),
-            'pending'  => ReturnRequest::where('status', 'pending')->count(),
+            'total' => ReturnRequest::count(),
+            'pending' => ReturnRequest::where('status', 'pending')->count(),
             'approved' => ReturnRequest::where('status', 'approved')->count(),
             'rejected' => ReturnRequest::where('status', 'rejected')->count(),
         ];
@@ -76,7 +76,7 @@ class ReturnRequestController extends Controller
                 'meter_id' => $meter->id,
                 'action' => 'return_requested',
                 'user_id' => Auth::id(),
-                'remark' => 'Reason: ' . $request->reason,
+                'remark' => 'Reason: '.$request->reason,
                 'timestamp' => now(),
             ]);
         });
@@ -90,7 +90,7 @@ class ReturnRequestController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error('Failed to send return request email: ' . $e->getMessage());
+                \Illuminate\Support\Facades\Log::error('Failed to send return request email: '.$e->getMessage());
             }
         }
 
@@ -123,14 +123,14 @@ class ReturnRequestController extends Controller
                     'status' => 'returned',
                     'current_worker_id' => null, // Remove assignment
                 ]);
-                
+
                 // TODO: Accounting Credit Logic here
-                
+
                 MeterLog::create([
                     'meter_id' => $meter->id,
                     'action' => 'return_approved',
                     'user_id' => Auth::id(),
-                    'remark' => 'Approved. ' . $request->admin_remark,
+                    'remark' => 'Approved. '.$request->admin_remark,
                     'timestamp' => now(),
                 ]);
 
@@ -143,7 +143,7 @@ class ReturnRequestController extends Controller
                     'meter_id' => $meter->id,
                     'action' => 'return_rejected',
                     'user_id' => Auth::id(),
-                    'remark' => 'Rejected. ' . $request->admin_remark,
+                    'remark' => 'Rejected. '.$request->admin_remark,
                     'timestamp' => now(),
                 ]);
             }

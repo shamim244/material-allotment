@@ -105,6 +105,11 @@
                                     </button>
                                 </form>
 
+                                <!-- Custom Deal / Override -->
+                                <a href="{{ route('super-admin.companies.override-subscription', $company->id) }}" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-purple-50 text-purple-700 hover:bg-purple-100 transition" title="Assign custom deal override">
+                                    Custom Deal
+                                </a>
+
                                 <!-- Edit -->
                                 <a href="{{ route('super-admin.companies.edit', $company->id) }}" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition">
                                     Edit

@@ -4,11 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Company;
 use App\Models\Meter;
+use App\Models\Referral;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Crypt;
 
 class SuperAdminController extends Controller
 {
@@ -18,17 +18,20 @@ class SuperAdminController extends Controller
     public function dashboard()
     {
         $stats = [
-            'total_companies'     => Company::count(),
-            'active_companies'    => Company::where('status', 'active')->count(),
+            'total_companies' => Company::count(),
+            'active_companies' => Company::where('status', 'active')->count(),
             'suspended_companies' => Company::where('status', 'suspended')->count(),
-            'total_contractors'   => User::where('role', 'contractor')->count(),
-            'total_workers'       => User::where('role', 'worker')->count(),
-            'total_meters'        => Meter::withoutGlobalScope('company')->count(),
-            'installed_meters'    => Meter::withoutGlobalScope('company')->where('status', 'installed')->count(),
-            'in_stock_meters'     => Meter::withoutGlobalScope('company')->where('status', 'stock')->count(),
+            'total_contractors' => User::where('role', 'contractor')->count(),
+            'total_workers' => User::where('role', 'worker')->count(),
+            'total_meters' => Meter::withoutGlobalScope('company')->count(),
+            'installed_meters' => Meter::withoutGlobalScope('company')->where('status', 'installed')->count(),
+            'in_stock_meters' => Meter::withoutGlobalScope('company')->where('status', 'stock')->count(),
         ];
 
         $companies = Company::withCount(['meters', 'workers', 'contractors'])
+            ->with(['subscriptions' => function ($q) {
+                $q->where('status', 'active')->latest('ends_at');
+            }])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
@@ -40,15 +43,19 @@ class SuperAdminController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Company::withCount(['meters', 'workers', 'contractors']);
+        $query = Company::withCount(['meters', 'workers', 'contractors'])
+            ->with(['subscriptions' => function ($q) {
+                $q->where('status', 'active')->latest('ends_at');
+            }]);
 
         if ($request->filled('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('code', 'like', "%{$search}%")
-                  ->orWhere('contact_person', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('code', 'like', "%{$search}%")
+                    ->orWhere('referral_code', 'like', "%{$search}%")
+                    ->orWhere('contact_person', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
             });
         }
 
@@ -75,45 +82,67 @@ class SuperAdminController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name'           => ['required', 'string', 'max:255'],
-            'code'           => ['nullable', 'string', 'max:50', 'unique:companies,code'],
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50', 'unique:companies,code'],
+            'referred_by_code' => ['nullable', 'string', 'exists:companies,referral_code'],
             'contact_person' => ['required', 'string', 'max:255'],
-            'email'          => ['required', 'email', 'max:255'],
-            'phone'          => ['nullable', 'string', 'max:20'],
-            'address'        => ['nullable', 'string'],
-            'max_workers'    => ['required', 'integer', 'min:1'],
-            'max_meters'     => ['required', 'integer', 'min:100'],
-            'admin_name'     => ['required', 'string', 'max:255'],
-            'admin_email'    => ['required', 'email', 'max:255', 'unique:users,email'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string'],
+            'max_workers' => ['required', 'integer', 'min:1'],
+            'max_meters' => ['required', 'integer', 'min:100'],
+            'admin_name' => ['required', 'string', 'max:255'],
+            'admin_email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'admin_password' => ['required', 'string', 'min:6'],
         ]);
 
+        $referredById = null;
+        if ($request->filled('referred_by_code')) {
+            $referrer = Company::where('referral_code', trim($request->referred_by_code))->first();
+            if ($referrer) {
+                $referredById = $referrer->id;
+            }
+        }
+
         $company = Company::create([
-            'name'           => $request->name,
-            'code'           => $request->code ?: ('NCC-' . str_pad(Company::count() + 1, 3, '0', STR_PAD_LEFT)),
+            'name' => $request->name,
+            'code' => $request->code ?: ('NCC-'.str_pad(Company::count() + 1, 3, '0', STR_PAD_LEFT)),
+            'referral_code' => Company::generateUniqueReferralCode('NCC-REF'),
+            'referred_by_id' => $referredById,
             'contact_person' => $request->contact_person,
-            'email'          => $request->email,
-            'phone'          => $request->phone,
-            'address'        => $request->address,
-            'status'         => 'active',
-            'max_workers'    => $request->max_workers,
-            'max_meters'     => $request->max_meters,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'address' => $request->address,
+            'status' => 'active',
+            'wallet_balance' => 0.00,
+            'max_workers' => $request->max_workers,
+            'max_meters' => $request->max_meters,
         ]);
+
+        // If referred by another company (and not self), create pending referral record
+        if ($referredById && $referredById !== $company->id) {
+            Referral::create([
+                'referrer_company_id' => $referredById,
+                'referred_company_id' => $company->id,
+                'reward_amount' => 500.00,
+                'status' => 'pending',
+            ]);
+        }
 
         // Create primary contractor admin user for this company
         User::create([
-            'company_id'     => $company->id,
-            'name'           => $request->admin_name,
-            'email'          => $request->admin_email,
-            'mobile'         => $request->phone,
-            'password'       => Hash::make($request->admin_password),
+            'company_id' => $company->id,
+            'name' => $request->admin_name,
+            'email' => $request->admin_email,
+            'mobile' => $request->phone,
+            'password' => Hash::make($request->admin_password),
             'plain_password' => $request->admin_password,
-            'role'           => 'contractor',
-            'is_active'      => true,
+            'role' => 'contractor',
+            'is_active' => true,
         ]);
 
         return redirect()->route('super-admin.companies.index')
-            ->with('success', "Contractor '{$company->name}' onboarded successfully with admin '{$request->admin_email}'.");
+            ->with('success', "Contractor '{$company->name}' onboarded successfully with admin '{$request->admin_email}' and referral code '{$company->referral_code}'.");
     }
 
     /**
@@ -122,7 +151,9 @@ class SuperAdminController extends Controller
     public function edit(Company $company)
     {
         $primaryContractor = $company->contractors()->first();
-        return view('super-admin.companies.edit', compact('company', 'primaryContractor'));
+        $currentSubscription = $company->currentSubscription();
+
+        return view('super-admin.companies.edit', compact('company', 'primaryContractor', 'currentSubscription'));
     }
 
     /**
@@ -131,19 +162,20 @@ class SuperAdminController extends Controller
     public function update(Request $request, Company $company)
     {
         $request->validate([
-            'name'           => ['required', 'string', 'max:255'],
-            'code'           => ['nullable', 'string', 'max:50', 'unique:companies,code,' . $company->id],
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:50', 'unique:companies,code,'.$company->id],
+            'referral_code' => ['nullable', 'string', 'max:50', 'unique:companies,referral_code,'.$company->id],
             'contact_person' => ['required', 'string', 'max:255'],
-            'email'          => ['required', 'email', 'max:255'],
-            'phone'          => ['nullable', 'string', 'max:20'],
-            'address'        => ['nullable', 'string'],
-            'status'         => ['required', 'in:active,suspended,trial'],
-            'max_workers'    => ['required', 'integer', 'min:1'],
-            'max_meters'     => ['required', 'integer', 'min:100'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:20'],
+            'address' => ['nullable', 'string'],
+            'status' => ['required', 'in:active,suspended,trial'],
+            'max_workers' => ['required', 'integer', 'min:1'],
+            'max_meters' => ['required', 'integer', 'min:100'],
         ]);
 
         $company->update($request->only([
-            'name', 'code', 'contact_person', 'email', 'phone', 'address', 'status', 'max_workers', 'max_meters'
+            'name', 'code', 'referral_code', 'contact_person', 'email', 'phone', 'address', 'status', 'max_workers', 'max_meters',
         ]));
 
         return redirect()->route('super-admin.companies.index')
@@ -158,7 +190,7 @@ class SuperAdminController extends Controller
         $newStatus = $company->status === 'active' ? 'suspended' : 'active';
         $company->update(['status' => $newStatus]);
 
-        return back()->with('success', "Company '{$company->name}' status changed to " . ucfirst($newStatus) . ".");
+        return back()->with('success', "Company '{$company->name}' status changed to ".ucfirst($newStatus).'.');
     }
 
     /**
@@ -168,7 +200,7 @@ class SuperAdminController extends Controller
     {
         $contractor = $company->contractors()->first();
 
-        if (!$contractor) {
+        if (! $contractor) {
             return back()->with('error', "No contractor admin found for '{$company->name}'.");
         }
 
