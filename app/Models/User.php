@@ -10,12 +10,15 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use App\Models\MeterActivation;
+use App\Models\Company;
+use App\Models\Traits\BelongsToCompany;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, BelongsToCompany;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +26,7 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
+        'company_id',
         'name',
         'email',
         'mobile',
@@ -100,5 +104,37 @@ class User extends Authenticatable
     public function assignments()
     {
         return $this->hasMany(Assignment::class, 'worker_id');
+    }
+
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function isContractor(): bool
+    {
+        return $this->role === 'contractor';
+    }
+
+    public function isWorker(): bool
+    {
+        return $this->role === 'worker';
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function ($user) {
+            if (empty($user->company_id) && Auth::hasUser()) {
+                $auth = Auth::user();
+                if ($auth->role !== 'super_admin' && !empty($auth->company_id)) {
+                    $user->company_id = $auth->company_id;
+                }
+            }
+        });
     }
 }

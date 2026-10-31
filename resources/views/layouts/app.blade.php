@@ -114,11 +114,33 @@
 
             {{-- Dashboard --}}
             <a href="{{ route('dashboard') }}"
-               class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}"
+               class="sidebar-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}"
                title="Dashboard">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 <span x-show="sidebarOpen" x-cloak class="truncate">Dashboard</span>
             </a>
+
+            @if(Auth::user()->role === 'super_admin')
+                <p class="sidebar-group-label" x-show="sidebarOpen" x-cloak>Platform SaaS</p>
+                <a href="{{ route('super-admin.dashboard') }}"
+                   class="sidebar-link {{ request()->routeIs('super-admin.dashboard') ? 'active' : '' }}"
+                   title="Platform Stats">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                    <span x-show="sidebarOpen" x-cloak class="truncate">Platform Stats</span>
+                </a>
+                <a href="{{ route('super-admin.companies.index') }}"
+                   class="sidebar-link {{ request()->routeIs('super-admin.companies.*') ? 'active' : '' }}"
+                   title="Contractors">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                    <span x-show="sidebarOpen" x-cloak class="truncate">Contractors</span>
+                </a>
+                <a href="{{ route('super-admin.companies.create') }}"
+                   class="sidebar-link {{ request()->routeIs('super-admin.companies.create') ? 'active' : '' }}"
+                   title="Onboard Agency">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span x-show="sidebarOpen" x-cloak class="truncate">Onboard Agency</span>
+                </a>
+            @endif
 
             @if(Auth::user()->role === 'contractor')
 
@@ -307,10 +329,16 @@
         </div>
         <!-- Same nav, always expanded -->
         <nav class="flex-1 py-3 px-3 space-y-0.5 sidebar-scrollable">
-            <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
+            <a href="{{ route('dashboard') }}" class="sidebar-link {{ request()->routeIs('dashboard') || request()->routeIs('super-admin.dashboard') ? 'active' : '' }}">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
+            @if(Auth::user()->role === 'super_admin')
+                <p class="sidebar-group-label">Platform SaaS</p>
+                <a href="{{ route('super-admin.dashboard') }}" class="sidebar-link {{ request()->routeIs('super-admin.dashboard') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg> Platform Stats</a>
+                <a href="{{ route('super-admin.companies.index') }}" class="sidebar-link {{ request()->routeIs('super-admin.companies.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg> Contractors</a>
+                <a href="{{ route('super-admin.companies.create') }}" class="sidebar-link {{ request()->routeIs('super-admin.companies.create') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg> Onboard Agency</a>
+            @endif
             @if(Auth::user()->role === 'contractor')
                 <p class="sidebar-group-label">Inventory</p>
                 <a href="{{ route('stock.index') }}" class="sidebar-link {{ request()->routeIs('stock.*') ? 'active' : '' }}"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg> Stock</a>
@@ -368,10 +396,21 @@
             </button>
 
             <!-- Page title / breadcrumb -->
-            <div class="flex-1 min-w-0">
+            <div class="flex-1 min-w-0 flex items-center gap-3">
                 @isset($header)
                     <div class="text-base font-semibold text-gray-900 truncate">{!! $header !!}</div>
                 @endisset
+
+                @if(Auth::check() && Auth::user()->company)
+                    <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200" title="Operating Workspace">
+                        <span class="text-xs">🏢</span>
+                        <span class="truncate max-w-[200px]">{{ Auth::user()->company->name }}</span>
+                    </span>
+                @elseif(Auth::check() && Auth::user()->role === 'super_admin')
+                    <span class="hidden md:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                        <span>👑</span> Super Admin Master
+                    </span>
+                @endif
             </div>
 
             <!-- Global Search -->

@@ -189,12 +189,17 @@ class UserManagementController extends Controller
             return redirect()->route('dashboard');
         }
 
-        $admin = User::findOrFail($adminId);
+        $admin = User::withoutGlobalScope('company')->findOrFail($adminId);
 
         session()->forget('impersonator_id');
         session()->forget('impersonator_name');
 
         Auth::login($admin);
+
+        if ($admin->role === 'super_admin') {
+            return redirect()->route('super-admin.companies.index')
+                ->with('success', 'You have returned to your Super Admin account.');
+        }
 
         return redirect()->route('admin.users.index')
             ->with('success', 'You have returned to your admin account.');

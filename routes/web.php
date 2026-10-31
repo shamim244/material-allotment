@@ -139,6 +139,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Admin: Email Activity Log
     Route::get('/admin/email-logs', [App\Http\Controllers\EmailLogController::class, 'index'])->name('admin.email-logs.index');
     Route::delete('/admin/email-logs', [App\Http\Controllers\EmailLogController::class, 'clear'])->name('admin.email-logs.clear');
+
+    // Super Admin Portal
+    Route::middleware(['super_admin'])->prefix('super-admin')->name('super-admin.')->group(function () {
+        Route::get('/', [App\Http\Controllers\SuperAdminController::class, 'dashboard'])->name('dashboard');
+        Route::get('/companies', [App\Http\Controllers\SuperAdminController::class, 'index'])->name('companies.index');
+        Route::get('/companies/create', [App\Http\Controllers\SuperAdminController::class, 'create'])->name('companies.create');
+        Route::post('/companies', [App\Http\Controllers\SuperAdminController::class, 'store'])->name('companies.store');
+        Route::get('/companies/{company}/edit', [App\Http\Controllers\SuperAdminController::class, 'edit'])->name('companies.edit');
+        Route::put('/companies/{company}', [App\Http\Controllers\SuperAdminController::class, 'update'])->name('companies.update');
+        Route::patch('/companies/{company}/toggle', [App\Http\Controllers\SuperAdminController::class, 'toggleStatus'])->name('companies.toggle');
+        Route::post('/companies/{company}/impersonate', [App\Http\Controllers\SuperAdminController::class, 'impersonate'])->name('companies.impersonate');
+        Route::delete('/companies/{company}', [App\Http\Controllers\SuperAdminController::class, 'destroy'])->name('companies.destroy');
+    });
 });
 
 require __DIR__.'/auth.php';
